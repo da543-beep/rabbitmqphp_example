@@ -20,7 +20,34 @@ function doLogin($username,$password)
 	echo "Failed to connect to database: ". $mydb->connect_error . PHP_EOL;
 	return false;
     }
-
+    // This should be able to search through the users table
+    $query = "SELECT password FROM users WHERE username = ?";
+    //Hopefully this will prepar the SQL query
+    $stmt = $mydb->prepare($query);
+    //Attaches the username to the message in the query
+    $stmt->bind_param("s", $username);
+    //Execute the query
+    $stmt->execute();
+    //Get the result from MYsql
+    $result = $stmt->get_result();
+    //See if it exists
+    if ($result->num_rows == 1){
+        //Get the user's info
+        $row = $result->fetch_assoc();
+       // Going to test this
+       // This will compare the entered password with the stored password
+       if ($password === $row['password']){
+           $stmt->close();
+           $mydb->close();
+           //if both user and password are correct
+           return true;
+       }
+    }
+    //close everthing if login fails
+    $stmt->close();
+    $mydb->close();
+    //incorrect username or password
+    return false;
     // lookup username in databas
     // check password
    // return true;
