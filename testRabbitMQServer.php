@@ -8,10 +8,10 @@ function doLogin($username,$password)
 {
   //Connect to the MySql DB
   $mydb = new mysqli(
-      "100.121.9.69",
-      "testUser", 
-      "12345",
-      "testdb"
+      "100.95.75.38",
+      "mv466", 
+      "burnttoast",
+      "IT490"
    );
 
    //Going to check iof the DB failed
@@ -54,6 +54,41 @@ function doLogin($username,$password)
     //return false if not valid
 }
 
+function doRegistration($username, $email, $password)
+{
+  //Connect to the MySql DB
+  $mydb = new mysqli(
+      "100.95.75.38",
+      "mv466", 
+      "burnttoast",
+      "IT490"
+   );
+
+   //Going to check iof the DB failed
+    if ($mydb->connect_errno != 0)
+    {
+        echo "Failed to connect to database: ". $mydb->connect_error . PHP_EOL;
+        return false;
+    }
+    //Prepare an INSERT statement for a new account
+    $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+    $stmt = $mydb->prepare($query);
+    //Put the username and password into the query
+    // ss means both values are string
+    $stmt->bind_param('sss', $username, $email, $password);
+    // attempt to make an account
+   if ($stmt->execute()){
+      echo "User registered" . PHP_EOL;
+      $stmt->close();
+      $mydb->close();
+      return true;
+   }
+   echo "Register failed" . PHP_EOL;
+   $stmt->close();
+   $mydb->close();
+   return false;
+}
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -64,8 +99,10 @@ function requestProcessor($request)
   }
   switch ($request['type'])
   {
-    case "login":
+    case "Login":
       return doLogin($request['username'],$request['password']);
+    case "Registration":
+      return doRegistration($request['username'],$request['password'],$request['email']);
     case "validate_session":
       return doValidate($request['sessionId']);
   }
