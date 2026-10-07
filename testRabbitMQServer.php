@@ -6,6 +6,20 @@ require_once('rabbitMQLib.inc');
 
 function doLogin($username,$password)
 {
+    $request = array();
+    $request['type'] = 'Login';
+    $request['username'] = $username;
+    $request['password'] = $password;
+    echo "Sending login attemt to db listsener";
+
+    //connect to group m8 listener
+    $client = new rabbitMQClient("tetsRabbitMQ.ini", "databaseServer");
+    //Send login request
+    $response = $client->send_request($request);
+    echo "DB listener responded to login" . PHP_EOL;
+    var_dump($response);
+    return $response;
+/*
   //Connect to the MySql DB
   $mydb = new mysqli(
       "100.95.75.38",
@@ -52,11 +66,29 @@ function doLogin($username,$password)
     // check password
    // return true;
     //return false if not valid
+ */
 }
 
 function doRegistration($username, $email, $password)
 {
-  //Connect to the MySql DB
+	//test something
+echo "did this work?";
+//trying to build something to send to group m8's listner
+ $request = array();
+ $request['type'] = "Registration";
+ $request['username'] = $username;
+ $request['email'] = $email;
+ $request['password'] = $password;
+//This should allow mw to connect to his listner
+ $client = new rabbitMQClient("testRabbitMQ.ini", "databaseServer");
+ echo "Sending a registration attempt to listner" . PHP_EOL;
+ //Sending a request and waiting for response
+ $response = $client->send_request($request);
+ echo "Database listner worked" . PHP_EOL;
+ var_dump($response);
+ return $response;
+  /*
+  Connect to the MySql DB
   $mydb = new mysqli(
       "100.95.75.38",
       "mv466", 
@@ -64,29 +96,30 @@ function doRegistration($username, $email, $password)
       "IT490"
    );
 
-   //Going to check iof the DB failed
+   Going to check iof the DB failed
     if ($mydb->connect_errno != 0)
     {
         echo "Failed to connect to database: ". $mydb->connect_error . PHP_EOL;
         return false;
     }
-    //Prepare an INSERT statement for a new account
+    Prepare an INSERT statement for a new account
     $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     $stmt = $mydb->prepare($query);
-    //Put the username and password into the query
-    // ss means both values are string
+    Put the username and password into the query
+     ss means both values are string
     $stmt->bind_param('sss', $username, $email, $password);
-    // attempt to make an account
+     attempt to make an account
    if ($stmt->execute()){
       echo "User registered" . PHP_EOL;
       $stmt->close();
       $mydb->close();
       return true;
-   }
-   echo "Register failed" . PHP_EOL;
-   $stmt->close();
-   $mydb->close();
-   return false;
+   //}
+   //echo "Register failed" . PHP_EOL;
+   //$stmt->close();
+   //$mydb->close();
+   //return false;
+	*/
 }
 
 function requestProcessor($request)
@@ -102,7 +135,25 @@ function requestProcessor($request)
     case "Login":
       return doLogin($request['username'],$request['password']);
     case "Registration":
-      return doRegistration($request['username'],$request['password'],$request['email']);
+	    $result =  doRegistration($request['username'],$request['email'],$request['password']);
+	    return $result;
+	    var_dump($response);
+	/*
+	if ($result)
+    	{
+        	return array(
+           	 "success" => true,
+            	"message" => "Registration successful"
+        	);
+    	}
+    	else
+    	{
+        	return array(
+            	"success" => false,
+            	"message" => "Registration failed"
+        	);
+    	}
+*/
     case "validate_session":
       return doValidate($request['sessionId']);
   }
