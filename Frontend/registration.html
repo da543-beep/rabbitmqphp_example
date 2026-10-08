@@ -1,0 +1,57 @@
+<html>
+<script>
+
+function HandleLoginResponse(response)
+{
+var text = JSON.parse(response);
+// document.getElementById("textResponse").innerHTML = response+"<p>";
+document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+}
+
+function SendRegistrationRequest(username,password,email)
+{
+var request = new XMLHttpRequest();
+request.open("POST","registration.php",true);
+request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+request.onreadystatechange= function ()
+{
+
+if ((this.readyState == 4)&&(this.status == 200))
+{
+HandleLoginResponse(this.responseText);
+}
+}
+request.send("type=registration&uname="+username+"&pword="+password+"&email="+email);
+}
+</script>
+
+<h1>registration page</h1>
+<body>
+
+<form onsubmit="SendRegistrationRequest(document.getElementById('username').value, document.getElementById('password').value, document.getElementById('email').value); return false;">
+<label for="username">Username:</label>
+<input type="text" id="username" name="username" required>
+
+<br><br>
+
+<label for="password">Password:</label>
+<input type="password" id="password" name="password" required>
+
+<br><br>
+
+<label for="email">Email Address:</label>
+<input type="text" id="email" name="email" required>
+
+<br><br>
+
+<button type="submit">Register</button>
+
+<button type="button" onclick="window.location.href='index.html'">Login</button>
+
+
+</form>
+<div id="textResponse">
+awaiting response
+</div>
+</body>
+</html>
