@@ -1,11 +1,20 @@
 <html>
 <script>
 
-function HandleLoginResponse(response)
+function HandleRegistrationResponse(response)
 {
 var text = JSON.parse(response);
 // document.getElementById("textResponse").innerHTML = response+"<p>";
-document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text);
+
+if (text["success"] == true)
+	{
+		alert("Registration Successful")
+	}
+	else {
+		alert("Registration Failed: " + text["message"]);
+	}
+
 }
 
 function SendRegistrationRequest(username,password,email)
@@ -18,7 +27,7 @@ request.onreadystatechange= function ()
 
 if ((this.readyState == 4)&&(this.status == 200))
 {
-HandleLoginResponse(this.responseText);
+HandleRegistrationResponse(this.responseText);
 }
 }
 request.send("type=registration&uname="+username+"&pword="+password+"&email="+email);
@@ -28,7 +37,9 @@ request.send("type=registration&uname="+username+"&pword="+password+"&email="+em
 <h1>registration page</h1>
 <body>
 
-<form onsubmit="SendRegistrationRequest(document.getElementById('username').value, document.getElementById('password').value, document.getElementById('email').value); return false;">
+<form onsubmit="SendRegistrationRequest(document.getElementById('username').value,
+document.getElementById('password').value,
+document.getElementById('email').value); return false;">
 <label for="username">Username:</label>
 <input type="text" id="username" name="username" required>
 
@@ -55,3 +66,5 @@ awaiting response
 </div>
 </body>
 </html>
+
+
