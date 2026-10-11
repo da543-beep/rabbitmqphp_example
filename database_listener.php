@@ -85,9 +85,44 @@ function doRegistration($username, $email, $password)
     } 
 }
 
-/*function doLogin($username, $password){
+function doLogin($username, $password){
+	if(!is_string($username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)){
+		return ['success' => false, 'message' => 'Username invalid'];
+	}
 
-}*/
+	if(!isset($password)){
+		return ['success' => false, 'message' => 'Password invalid'];
+	}
+	//Connects to Database
+	$db = getDb();
+    		if ($db === null) {
+			return ['success' => false, 'message' => 'Database unavailable'];
+		}
+	try {
+        $stmt = $db->prepare("SELECT password, username FROM users WHERE username = ?");
+        $stmt->bind_param('s', $username);
+	$stmt->execute();
+	$stmt->bind_result($storedUsername, $storedPassword);
+	$found = $stmt->fetch();
+        $stmt->close();
+        $db->close();
+
+	if ($found && password_verify($password, $storedPassword)) {
+		echo "Logged in user: " . $username. PHP_EOL;
+		return ['success' => true];
+	}
+
+        echo "Failed login for user: " . $username . PHP_EOL;  
+	return ['success' => false, 'message' => 'Login failed'];
+	}
+
+	catch (mysqli_sql_exception $e) 
+	{
+		echo "Login error: " . $e->getMessage() . PHP_EOL;
+		$db->close();	
+		return ['success'=>false, 'message'=>'Unable to process login'];
+	}
+}
 /**
  * Called by the RabbitMQ library for every message that arrives.
  * Whatever this returns is sent back to the requester as the reply.
@@ -110,25 +145,27 @@ function requestProcessor($request)
 	    echo "replying: " . json_encode($result) . PHP_EOL;
 	    return $result;
 	    
-        // Add more cases here as you build them, for example:
-        // case 'login': return doLogin($request['username'], $request['password']);
-    }
-/*case 'login':
-	if (!isset($request['username'], $request['password'])) {
-		return ['success' => false, 'message' => 'Missing login fields'];
-	}*/
-	//need a doLogin() function
+	case 'login':
+		if (!isset($request['username'], $request['password'])) {
+			return ['success' => false, 'message' => 'Missing login fields'];
+		}
+		
+		$result = doLogin($request['username'], $request['password']);
+		echo "replying: " . json_encode($result) . PHP_EOL;
+		return $result;
+	}
+		
     return ['success' => false, 'message' => 'Unknown request type'];
 }
 
-// Connect to RabbitMQ using the [testServer] section of testRabbitMQ.ini
-// (the front end's client must use the same section / exchange / queue).
+//Connect to RabbitMQ using the [testServer] section of testRabbitMQ.ini
+//(the front end's client must use the same section / exchange / queue).
 $server = new rabbitMQServer('testRabbitMQ.ini', 'databaseServer');
-
 echo "database listener started, waiting for requests..." . PHP_EOL;
 $server->process_requests('requestProcessor');
 echo "database listener stopped" . PHP_EOL;
 exit();
+
 /*
 header("Content-Type: application/json");
 
