@@ -39,6 +39,28 @@ function doRegistration($username, $email, $password)
  return $response
 }
 
+function doValidate($sessionId)
+{
+    // Build request to send to database listener
+    $request = array();
+
+    $request['type'] = "validate_session";
+    $request['sessionId'] = $sessionId;
+
+    // Connect to database listener through RabbitMQ
+    $client = new rabbitMQClient(
+        "testRabbitMQ.ini",
+        "databaseServer"
+    );
+    echo "Sending session validation to DB listener" . PHP_EOL;
+    // Send session ID and wait for database response
+    $response = $client->send_request($request);
+    echo "DB listener responded to session validation" . PHP_EOL;
+    var_dump($response);
+    // Send database response back toward frontend
+    return $response;
+}
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -50,7 +72,8 @@ function requestProcessor($request)
   switch ($request['type'])
   {
     case "Login":
-      return doLogin($request['username'],$request['password']);
+	    $result = doLogin($request['username'],$request['password']);
+	    return $result;
     case "Registration":
 	    $result =  doRegistration($request['username'],$request['email'],$request['password']);
 	    return $result;
