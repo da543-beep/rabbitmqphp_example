@@ -1,24 +1,11 @@
 #!/usr/bin/php
 <?php
-// databaselistener.php
-// Runs on the database VM. Waits for requests from RabbitMQ, talks to MySQL,
-// and returns an array that the library sends back to the requester.
-//
-// Start it with:  php databaselistener.php
-// Needs in the same folder: path.inc, get_host_info.inc, rabbitMQLib.inc,
-//                           testRabbitMQ.ini (broker settings), db.ini (MySQL settings)
-
 require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
-// Make mysqli throw exceptions on every PHP version, so errors are caught below.
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-/**
- * Open a MySQL connection using the settings in db.ini.
- * Returns a mysqli object, or null if the connection fails.
- */
 function getDb()
 {
     $ini = parse_ini_file(__DIR__ . '/db.ini', true);
@@ -71,7 +58,6 @@ function doRegistration($username, $email, $password)
         $db->close();
 
 	echo "Registered user: " . $username . PHP_EOL;   // never print the password
-	//send_request('Message Success!');
         return ['success' => true];
     } catch (mysqli_sql_exception $e) {
         $db->close();
@@ -99,15 +85,15 @@ function doLogin($username, $password){
 			return ['success' => false, 'message' => 'Database unavailable'];
 		}
 	try {
-        $stmt = $db->prepare("SELECT password, username FROM users WHERE username = ?");
+        $stmt = $db->prepare("SELECT password FROM users WHERE username = ?");
         $stmt->bind_param('s', $username);
 	$stmt->execute();
-	$stmt->bind_result($storedUsername, $storedPassword);
+	$stmt->bind_result($storedPassword);
 	$found = $stmt->fetch();
         $stmt->close();
         $db->close();
 
-	if ($found && password_verify($password, $storedPassword)) {
+	if ($found && ($password===$storedPassword)) {
 		echo "Logged in user: " . $username. PHP_EOL;
 		return ['success' => true];
 	}
