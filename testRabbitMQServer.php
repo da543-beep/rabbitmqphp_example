@@ -36,7 +36,7 @@ function doRegistration($username, $email, $password)
  $response = $client->send_request($request);
  echo "Database listner worked" . PHP_EOL;
  var_dump($response);
- return $response
+ return $response;
 }
 
 function doValidate($sessionId)
