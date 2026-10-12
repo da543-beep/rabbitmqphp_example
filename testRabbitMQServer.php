@@ -21,6 +21,20 @@ function doLogin($username,$password)
     return $response;
 }
 
+function doLogout($sessionId)
+{
+     $request = array();
+     $request['type'] = "logout";
+     $request['sessionId'] = $sessionId;
+     $client = new rabbitMQClient("testRabbitMQ.ini", "databaseServer");
+
+     echo "Sending logout request to DB listener" . PHP_EOL;
+     $response = $client->send_request($request);
+     echo "DB listener responded to logout" .PHP_EOL;
+     var_dump($response);
+     return $response;
+}
+
 function doRegistration($username, $email, $password)
 {
 //trying to build something to send to group m8's listner
@@ -68,6 +82,9 @@ function requestProcessor($request)
   {
     case "Login":
 	    $result = doLogin($request['username'],$request['password']);
+	    return $result;
+    case "logout":
+	    $result = doLogout($request['sessionId']);
 	    return $result;
     case "Registration":
 	    $result =  doRegistration($request['username'],$request['email'],$request['password']);
