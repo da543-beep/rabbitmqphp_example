@@ -43,15 +43,10 @@ function doValidate($sessionId)
 {
     // Build request to send to database listener
     $request = array();
-
     $request['type'] = "validate_session";
     $request['sessionId'] = $sessionId;
-
     // Connect to database listener through RabbitMQ
-    $client = new rabbitMQClient(
-        "testRabbitMQ.ini",
-        "databaseServer"
-    );
+    $client = new rabbitMQClient("testRabbitMQ.ini",  "databaseServer");
     echo "Sending session validation to DB listener" . PHP_EOL;
     // Send session ID and wait for database response
     $response = $client->send_request($request);
