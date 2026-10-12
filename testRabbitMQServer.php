@@ -100,4 +100,3 @@ $server = new rabbitMQServer("testRabbitMQ.ini","testServer");
 
 $server->process_requests('requestProcessor');
 exit();
->
