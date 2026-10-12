@@ -1,0 +1,68 @@
+<html>
+<script>
+
+function HandleSessionResponse(response)
+{
+var text = JSON.parse(response);
+// document.getElementById("textResponse").innerHTML = response+"<p>";
+//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text);
+
+if (text["success"] == true)
+{
+
+}
+else {
+	alert("Session expired or failed: " + text["message"]);
+	window.location.href = "index.html";
+}
+
+}
+
+
+function SendSessionRequest(username,session_key)
+{
+var request = new XMLHttpRequest();
+request.open("POST","validateSession.php",true); //check file name
+request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+request.onreadystatechange= function ()
+{
+
+if ((this.readyState == 4)&&(this.status == 200))
+{
+HandleLoginResponse(this.responseText);
+}
+}
+request.send("type=login&username="+username+"&session_key="+session_key);
+}
+</script>
+
+<p id="cookieOutput"></p>
+<script>
+const cookie = document.cookie
+	.split(";")
+	.map(c => c.trim())
+	.find(c => c.startsWith("SessionTest="));
+const cookieValue = cookie
+? decodeURIComponent(cookie.substring("SessionTest=".length))
+: "cookie not found";
+
+document.getElementById("cookieOutput").textContent = cookieValue;
+console.log(cookieValue);
+
+/*
+
+const cookie = "testing output"
+.split("; ")
+.find(c => c.startsWith("SessionTest="));
+document.getElementById("cookieOutput").textContent = 
+	cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "cookie not found";
+
+
+console.log(SessionTest);
+
+*/
+</script>
+
+</html>
+
