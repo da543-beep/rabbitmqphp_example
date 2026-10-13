@@ -1,0 +1,95 @@
+<html>
+<script>
+
+function HandleSessionResponse(response)
+{
+var text = JSON.parse(response);
+//document.getElementById("textResponse").innerHTML = response+"<p>";
+//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+
+if (text["success"] !== true)
+{
+
+	alert("Session expired or failed: " + text["message"]);
+	window.location.href = "index.html";
+}
+
+}
+
+
+function SendSessionRequest(session_key)
+{
+var request = new XMLHttpRequest();
+request.open("POST","validateSession.php",true); //check file name
+request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+request.onreadystatechange= function ()
+{
+
+if ((this.readyState == 4)&&(this.status == 200))
+{
+HandleSessionResponse(this.responseText);
+}
+}
+request.send("type=session_validate&session_key="+session_key);
+}
+</script>
+
+<p id="cookieOutput"></p>
+<script>
+	window.onload = function()
+	{
+		const cookie = document.cookie
+		.split(";")
+		.map(c => c.trim())
+		.find(c => c.startsWith("SessionTest="));
+
+		const session_key = cookie
+		? decodeURIComponent(cookie.substring("SessionTest=".length))
+		: "";
+
+		SendSessionRequest(session_key);
+/*
+		const SessionUserCookie = document.cookie
+		.split(";")
+		.map(c => c.trim())
+		.find(c => c.startsWith("SessionUsername"));
+
+		const session_username = SessionUserCookie
+		? decodeURIComponent(cookie.substring("SessionUsername=".length))
+		: "";
+*/
+
+	};
+
+/*
+			const cookie = document.cookie
+	.split(";")
+	.map(c => c.trim())
+	.find(c => c.startsWith("SessionTest="));
+const cookieValue = cookie
+? decodeURIComponent(cookie.substring("SessionTest=".length))
+: "cookie not found";
+*/
+document.getElementById("cookieOutput").textContent = cookieValue;
+console.log(cookieValue);
+
+</script>
+<br></br>
+<!--
+<h1> Welcome </h1>
+<body>
+	<div id="welcomeResponse">
+		welcome
+	</div>
+</body>
+-->
+
+<br></br>
+<script>
+/*
+<button type="button" onclick="window.location.href='index.html'">logout</button>
+*/
+</script>
+</html>
+
