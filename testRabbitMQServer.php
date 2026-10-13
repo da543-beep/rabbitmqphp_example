@@ -21,11 +21,12 @@ function doLogin($username,$password)
     return $response;
 }
 
-function doLogout($sessionId)
+function doLogout($session_key, $username)
 {
      $request = array();
      $request['type'] = "logout";
-     $request['sessionId'] = $sessionId;
+     $request['session_key'] = $session_key;
+     $request['username'] = $username;
      $client = new rabbitMQClient("testRabbitMQ.ini", "databaseServer");
 
      echo "Sending logout request to DB listener" . PHP_EOL;
@@ -100,7 +101,7 @@ function requestProcessor($request)
 	    $result = doLogin($request['username'],$request['password']);
 	    return $result;
     case "logout":
-	    $result = doLogout($request['sessionId']);
+	    $result = doLogout($request['session_key'], $request['username']);
 	    return $result;
     case "Registration":
 	    $result =  doRegistration($request['username'],$request['email'],$request['password']);
