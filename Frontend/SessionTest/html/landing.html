@@ -30,7 +30,7 @@ request.onreadystatechange= function ()
 
 if ((this.readyState == 4)&&(this.status == 200))
 {
-HandleLoginResponse(this.responseText);
+HandleSessionResponse(this.responseText);
 }
 }
 request.send("type=login&username="+username+"&session_key="+session_key);
