@@ -70,7 +70,41 @@ function doRegistration($username, $email, $password)
         return ['success' => false, 'message' => 'Registration failed'];
     } 
 }
+function doValidate($sessionKey){
+	//connects to database
+	$db = getDb();
+		if ($db === null) {
+			return ['success' => false, 'message' => 'Database unavailable'];
+		}			
+	try{
+	$stmt = $db->prepare("SELECT username FROM users WHERE session_key = ? AND session_expires > NOW()");
+	$stmt->bind_param('s',$sessionKey);
+	$stmt->execute();
+	$stmt->bind_result($username);
+	$session_found =$stmt->fetch();
+	$stmt->close();
+	
+	if ($session_found){
+		$db->close();
+		echo "Valid session for user: " . $username . PHP_EOL;
+		return ['success' => true, 'username'=> $username]; 
+	}
+	$stmt = $db->prepare("UPDATE users SET session_key = NULL, session_expires = NULL WHERE session_key=?");
+	$stmt->bind_param('s',$sessionKey);
+	$stmt->execute();
+	$stmt->close();
+	$db->close();
 
+	echo "Invalid session" . PHP_EOL;
+	return ['success' => false, 'message'=>'Session expired or invalid'];
+
+	} catch (mysqli_sql_exception $e) {
+		echo "Session check error: " . $e->getMessage() . PHP_EOL;
+		$db->close();
+		return ['success' => false, 'message' => 'Session check failed'];
+	}
+	
+}
 function doLogin($username, $password){
 	if(!is_string($username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)){
 		return ['success' => false, 'message' => 'Username invalid'];
@@ -90,12 +124,21 @@ function doLogin($username, $password){
 	$stmt->execute();
 	$stmt->bind_result($storedPassword);
 	$found = $stmt->fetch();
-        $stmt->close();
-        $db->close();
+	$stmt->close();
 
 	if ($found && ($password===$storedPassword)) {
+		//generate session_key here
+		$sessionKey = bin2hex(random_bytes(32));
+		$stmt = $db->prepare("UPDATE users SET session_key = ?, session_expires = DATE_ADD(NOW(), INTERVAL 2 MINUTE) WHERE username=?");
+		$stmt->bind_param('ss', $sessionKey, $username);
+		$stmt->execute();
+		$stmt->close();
+		$db->close();
+		
+		 
+		
 		echo "Logged in user: " . $username. PHP_EOL;
-		return ['success' => true];
+		return ['success' => true, 'username'=> $username, 'session_key' => $sessionKey];
 	}
 
         echo "Failed login for user: " . $username . PHP_EOL;  
@@ -107,6 +150,44 @@ function doLogin($username, $password){
 		echo "Login error: " . $e->getMessage() . PHP_EOL;
 		$db->close();	
 		return ['success'=>false, 'message'=>'Unable to process login'];
+	}
+	
+}
+function doLogout($username, $sessionKey)
+{
+	$db = getDb();
+		if ($db === null) {
+			return ['success' => false, 'message' => 'Database unavailable'];
+		}
+	try{
+		$stmt=$db->prepare("SELECT username FROM users WHERE username = ? AND session_key=?");
+		$stmt->bind_param('ss',$username, $sessionKey);
+		$stmt->execute();
+		$stmt->bind_result($storedUsername);
+		$validUser = $stmt->fetch();
+		$stmt->close();
+		
+
+		if($validUser)
+		{
+			$stmt=$db->prepare('UPDATE users SET session_key=NULL, session_expires=NULL WHERE username=? AND session_key =?');
+			$stmt->bind_param('ss',$username, $sessionKey);
+			$stmt->execute();
+			$stmt->close();
+			$db->close();
+
+			echo "Logged out user: " . $username. PHP_EOL;
+			return ['success' => true, 'username'=> $username];
+		}
+		$db->close();
+		echo "Failed logout for some reason: " . $username. PHP_EOL;
+		return ['success' => false, 'message'=>'Logout Failed '];
+	}
+	catch (mysqli_sql_exception $e)
+	{
+		echo "Logout error: " . $e->getMessage() . PHP_EOL;
+		$db->close();
+		return ['success'=>false, 'message'=>'Unable to process logout'];
 	}
 }
 /**
@@ -122,6 +203,7 @@ function requestProcessor($request)
     }
 
     switch (strtolower($request['type'])) {
+
    	 case 'registration':
             if (!isset($request['username'], $request['email'], $request['password'])) {
                 return ['success' => false, 'message' => 'Missing registration fields'];
@@ -139,11 +221,27 @@ function requestProcessor($request)
 		$result = doLogin($request['username'], $request['password']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
-	}
+    		
+	case 'logout':
+		if (!isset($request['username'], $request['session_key'])){
+			return ['success' => false, 'message' => 'Invalid logout fields'];
+		}
+		 $result = doLogout($request['username'], $request['session_key']);
+		 echo "replying: " . json_encode($result). PHP_EOL;
+		 return $result;
+
+    	case 'validate_session':
+		if (!isset($request['session_key'])){
+			return ['success' => false, 'message' => 'Invalid session key'];
+		}
+		$result = doValidate($request['session_key']);
+		echo "replying: " . json_encode($result). PHP_EOL;
+		return $result;
+ 	 	
 		
     return ['success' => false, 'message' => 'Unknown request type'];
 }
-
+}
 //Connect to RabbitMQ using the [testServer] section of testRabbitMQ.ini
 //(the front end's client must use the same section / exchange / queue).
 $server = new rabbitMQServer('testRabbitMQ.ini', 'databaseServer');

@@ -225,6 +225,8 @@ class rabbitMQClient
 
 			$response = $this->response_queue[$uid];
 			unset($this->response_queue[$uid]);
+
+			$conn->disconnect(); //fixes issue with sending multiple requests
 			return $response;
 		}
 		catch(Exception $e)
