@@ -10,6 +10,10 @@ document.getElementById("textResponse").textContent = "response: " + JSON.string
 
 if (text["success"] == true)
 {
+let SessionTest = text["session_key"]; 
+let SessionUsername = text["username"];
+document.cookie = "SessionTest=" + encodeURIComponent(SessionTest) + "; path=/; SameSite=Lax;";
+document.cookie = "SessionUsername=" + encodeURIComponent(SessionUsername) + "; path=/; SameSite=Lax;";
 window.location.href = "landing.html";
 }
 else {

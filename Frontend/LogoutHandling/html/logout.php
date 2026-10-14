@@ -21,17 +21,17 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 /*
  * Make sure username and password were provided.
  */
-if (!isset($_POST["uname"]) || !isset($_POST["pword"]))
+if (!isset($_POST["session_key"]) || !isset($_POST["username"]))
 {
     echo json_encode([
         "success" => false,
-        "message" => "Username and password are required"
+        "message" => "Username or Session is wrong"
     ]);
     exit;
 }
 
-$username = $_POST["uname"];
-$password = $_POST["pword"];
+$username = $_POST["username"];
+$session_key = $_POST["session_key"];
 
 try
 {
@@ -49,9 +49,9 @@ try
      */
     $request = array();
 
-    $request["type"] = "Login";
+    $request["type"] = "logout";
     $request["username"] = $username;
-    $request["password"] = $password;
+    $request["session_key"] = $session_key;
 
     /*
      * Send the request through RabbitMQ.

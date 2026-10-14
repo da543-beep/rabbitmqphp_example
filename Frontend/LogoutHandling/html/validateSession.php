@@ -19,20 +19,18 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure username and password were provided.
+ * Make sure session is there.
  */
-if (!isset($_POST["uname"]) || !isset($_POST["pword"]) || !isset($_POST["email"]))
+if ( !isset($_POST["session_key"]))
 {
     echo json_encode([
         "success" => false,
-        "message" => "Username and password are required"
+        "message" => "Session is not the same"
     ]);
     exit;
 }
 
-$username = $_POST["uname"];
-$password = $_POST["pword"];
-$email = $_POST["email"];
+$session = $_POST["session_key"];
 
 try
 {
@@ -45,15 +43,12 @@ try
     );
 
     /*
-     * Build the registration request.
      * This matches your existing RabbitMQ client.
      */
     $request = array();
 
-    $request["type"] = "Registration";
-    $request["username"] = $username;
-    $request["password"] = $password;
-    $request["email"] = $email;
+    $request["type"] = "validate_session";
+    $request["session_key"] = $session;
 
     /*
      * Send the request through RabbitMQ.
