@@ -22,14 +22,9 @@ function getDb()
         return null;
     }
 }
-
-/**
- * Register a new user.
- * Returns ['success' => true] or ['success' => false, 'message' => '...'].
- */
 function doRegistration($username, $email, $password)
 {
-    // 1. Validate the input before touching the database.
+  
     if (!is_string($username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)) {
         return ['success' => false,
                 'message' => 'Username must be 3-50 characters: letters, numbers, underscore'];
@@ -190,10 +185,57 @@ function doLogout($username, $sessionKey)
 		return ['success'=>false, 'message'=>'Unable to process logout'];
 	}
 }
-/**
- * Called by the RabbitMQ library for every message that arrives.
- * Whatever this returns is sent back to the requester as the reply.
- */
+	function doStoreGames($games)
+	{
+	echo "work!: " . PHP_EOL;
+	$games = json_decode($games, true);
+
+	 $db = getDb();
+                if ($db === null) {
+                        return ['success' => false, 'message' => 'Database unavailable'];
+
+		}
+	 try
+	 {
+	
+		 $stmt=$db->prepare("INSERT INTO games (gameID, URL, genre, platform, releaseDate, name) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name = VALUES(name), URL = VALUES(URL), 
+			 genre = VALUES(genre), platform = VALUES(platform),
+			 releaseDate = VALUES(releaseDate)");
+		$stmt->bind_param('isssss', $id, $cover, $genres, $platforms, $release, $name);
+		$db->begin_transaction();
+		$stored = 0;
+		$skipped = 0;
+
+		foreach ($games as $g)
+		{
+			if (!isset($g['id'], $g['name'])){
+				$skipped++;
+				continue;									
+			}
+			$id = (int)$g['id'];
+			$name = $g['name'];
+			$cover = $g['cover'] ?? null;
+			$genres = $g['genres'] ?? null;
+			$platforms = $g['platforms'] ?? null;
+			$release = $g['release_date'] ?? null;
+
+			$stmt->execute();
+			$stored++;
+		}
+
+		$db->commit();
+		$stmt->close();
+		$db->close();
+
+		echo "Stored games: " . $stored. " (skipped " . $skipped . ")" . PHP_EOL;
+		return ['success'=> true, 'stored'=>$stored, 'skipped' => $skipped];
+	 } catch (mysqli_sql_exception $e) {
+		echo "Store games error: " . $e->getMessage() . PHP_EOL;
+		$db->rollback();
+		$db->close();
+		return ['success'=>false, 'message'=>'Could not store games'];
+	 }
+}
 function requestProcessor($request)
 {
     echo "received request of type: " . ($request['type'] ?? 'none') . PHP_EOL;
@@ -237,188 +279,19 @@ function requestProcessor($request)
 		$result = doValidate($request['session_key']);
 		echo "replying: " . json_encode($result). PHP_EOL;
 		return $result;
+	case 'storegames':
+		$result = doStoreGames($request['games']);
+		echo "replying: " . json_encode($result). PHP_EOL;
+		return $result;
  	 	
 		
     return ['success' => false, 'message' => 'Unknown request type'];
+
+    }
 }
-}
-//Connect to RabbitMQ using the [testServer] section of testRabbitMQ.ini
-//(the front end's client must use the same section / exchange / queue).
-$server = new rabbitMQServer('testRabbitMQ.ini', 'databaseServer');
+$server = new rabbitMQServer('testRabbitMQ.ini', 'testServer');
+
 echo "database listener started, waiting for requests..." . PHP_EOL;
 $server->process_requests('requestProcessor');
-echo "database listener stopped" . PHP_EOL;
 exit();
-
-/*
-header("Content-Type: application/json");
-
-if ($_SERVER["REQUEST_METHOD"] !== "POST")
-{
-    http_response_code(405);
-
-    echo json_encode([
-        "success" => false,
-        "message" => "POST required"
-    ]);
-
-    exit;
-}
-
-$username = $_POST["username"] ?? "";
-$password = $_POST["password"] ?? "";
-$email    = $_POST["email"] ?? "";
-
-if ($username === "" || $password === "" || $email === "")
-{
-    http_response_code(400);
-
-    echo json_encode([
-        "success" => false,
-        "message" => "Missing registration data"
-    ]);
-
-    exit;
-}
-
-/*
- * Connect to MySQL locally.
- *
- * This is the ONLY file that should know
- * the database credentials.
- 
-$db = new mysqli(
-    "127.0.0.1",
-    "mv466",
-    "burnttoast",
-    "users"
-);
-
-if ($db->connect_errno)
-{
-    http_response_code(500);
-
-    echo json_encode([
-        "success" => false,
-        "message" => "Database connection failed"
-    ]);
-
-    exit;
-}
-
-/*
- * Hash the password before storing it.
- 
-$passwordHash = password_hash(
-    $password,
-    PASSWORD_DEFAULT
-);
-
-$stmt = $db->prepare(
-    "INSERT INTO users (username, password, email)
-     VALUES (?, ?, ?)"
-);
-
-$stmt->bind_param(
-    "sss",
-    $username,
-    $passwordHash,
-    $email
-);
-
-if ($stmt->execute())
-{
-    echo json_encode([
-        "success" => true,
-        "message" => "User registered successfully"
-    ]);
-}
-else
-{
-    http_response_code(500);
-
-    echo json_encode([
-        "success" => false,
-        "message" => "Database insert failed"
-    ]);
-}
-
-$stmt->close();
-$db->close();
-
-
-/*
-require_once('path.inc');
-require_once('get_host_info.inc');
-require_once('rabbitMQLib.inc');
-
-function getDB(){
-	$cfg = parse_ini_file(__DIR__ . '/db.ini', true)['database'];
-function doRegistration($username, $email, $password)
-
-
-
-{
-
-
-  //Connect to the MySql DB
-
-
-  $mydb = new mysqli(
-
-      "100.95.75.38",
-      "mv466", 
-      "burnttoast",
-      "IT490"
-
-   );
-
-   //Going to check iof the DB failed
-
-
-    if ($mydb->connect_errno != 0)
-    {
-        echo "Failed to connect to database: ". $mydb->connect_error . PHP_EOL;
-        return false;
-    }
-
-
-    //Prepare an INSERT statement for a new account
-    $query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-
-    $stmt = $mydb->prepare($query);
-
-    //Put the username and password into the query
-
-    // ss means both values are string
-
-    $stmt->bind_param('sss', $username, $email, $password);
-
-    // attempt to make an account
-
-   if ($stmt->execute()){
-
-      echo "User registered" . PHP_EOL;
-
-      $stmt->close();
-
-      $mydb->close();
-
-      return true;
-
-   }
-
-   echo "Register failed" . PHP_EOL;
-
-   $stmt->close();
-
-
-   $mydb->close();
-
-
-   return false;
-
-
-}
- */
 ?>
