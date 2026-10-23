@@ -22,6 +22,7 @@ function getDb()
         return null;
     }
 }
+
 function doRegistration($username, $email, $password)
 {
   
@@ -65,6 +66,7 @@ function doRegistration($username, $email, $password)
         return ['success' => false, 'message' => 'Registration failed'];
     } 
 }
+
 function doValidate($sessionKey){
 	//connects to database
 	$db = getDb();
@@ -100,6 +102,7 @@ function doValidate($sessionKey){
 	}
 	
 }
+
 function doLogin($username, $password){
 	if(!is_string($username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)){
 		return ['success' => false, 'message' => 'Username invalid'];
@@ -185,7 +188,8 @@ function doLogout($username, $sessionKey)
 		return ['success'=>false, 'message'=>'Unable to process logout'];
 	}
 }
-	function doStoreGames($games)
+
+function doStoreGames($games)
 	{
 	echo "work!: " . PHP_EOL;
 	$games = json_decode($games, true);
@@ -217,7 +221,7 @@ function doLogout($username, $sessionKey)
 			$cover = $g['cover'] ?? null;
 			$genres = $g['genres'] ?? null;
 			$platforms = $g['platforms'] ?? null;
-			$release = $g['release_date'] ?? null;
+			$release = $g['release_dates'] ?? null;
 
 			$stmt->execute();
 			$stored++;
@@ -235,14 +239,60 @@ function doLogout($username, $sessionKey)
 		$db->close();
 		return ['success'=>false, 'message'=>'Could not store games'];
 	 }
+	}
+
+function doSearch($game, $genre, $platform)
+{
+	$game=is_string($game) ? trim($game) : '';
+	$genre=is_string($genre) ? trim($genre) : '';
+	$platform=is_string($genre) ? trim($genre) : '';
+
+	 $db = getDb();
+                if ($db === null) {
+                        return ['success' => false, 'message' => 'Database unavailable'];
+                }
+	 //if user inputs game 
+	 //if user only searchs for game, the game is returned alongside similar games names
+	 //if user prints inputs only all genres with no game name or platforms, whole database is returned
+	 //if user inputs platforms, only that game with that specified platform prints 
+	 //
+	 try
+	 {
+		 $where=[];
+		 $params=[];
+
+		 if($game !== '') {$where[] = "name LIKE ?"; $params[]='%' . $game . '%'; }
+		 if($genre !== '') {$where[] = "genres LIKE ?"; $params[]='%' . $genre . '%';}
+		if($platform !== '') {$where[] = "platforms LIKE ?"; $params[]='%' . $platform . '%';}
+		
+		 $sql="SELECT gameID, name, URL, genre, platform, releaseDate FROM games";
+		 if ($where) {
+			 $sql .=" WHERE " . implode(' AND ', $where);
+		 }
+		 $sql .= " ORDER BY name LIMIT 100";
+
+		 $stmt=$db->prepare("$sql");
+		 if ($params) {
+		 	$stmt->bind_param(str_repeat('s', count($params)), ...$params);
+		 }
+		 $stmt->execute();
+		 $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+		 $stmt->close();
+		 $db->close();
+
+		 echo "Searched returned " . count($rows) . " games" . PHP_EOL;
+		 return ['success'=> true, 'count' =>($rows), 'games'=> $rows];
+	 } catch (mysqli_sql_exception $e) {
+		 echo "Search error: " . $e->getMessage() . PHP_EOL;
+		 $db->close();
+		 return ['success'=>false, 'message'=>'Search failed'];
+
+	 }
 }
+ 
 function requestProcessor($request)
 {
     echo "received request of type: " . ($request['type'] ?? 'none') . PHP_EOL;
-
-    if (!isset($request['type'])) {
-        return ['success' => false, 'message' => 'Missing request type'];
-    }
 
     switch (strtolower($request['type'])) {
 
@@ -253,7 +303,8 @@ function requestProcessor($request)
             $result = doRegistration($request['username'], $request['email'], $request['password']);
 
 	    echo "replying: " . json_encode($result) . PHP_EOL;
-	    return $result;
+	    return $result
+	    break;
 	    
 	case 'login':
 		if (!isset($request['username'], $request['password'])) {
@@ -263,6 +314,7 @@ function requestProcessor($request)
 		$result = doLogin($request['username'], $request['password']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
+		break;
     		
 	case 'logout':
 		if (!isset($request['username'], $request['session_key'])){
@@ -271,6 +323,7 @@ function requestProcessor($request)
 		 $result = doLogout($request['username'], $request['session_key']);
 		 echo "replying: " . json_encode($result). PHP_EOL;
 		 return $result;
+		 break;
 
     	case 'validate_session':
 		if (!isset($request['session_key'])){
@@ -279,15 +332,28 @@ function requestProcessor($request)
 		$result = doValidate($request['session_key']);
 		echo "replying: " . json_encode($result). PHP_EOL;
 		return $result;
+		break;
+
 	case 'storegames':
 		$result = doStoreGames($request['games']);
 		echo "replying: " . json_encode($result). PHP_EOL;
 		return $result;
- 	 	
-		
+		break;
+
+	case 'search':
+		$result = doSearch($request['name'] ?? '', $request['genre'] ?? '', $request['platform'] ?? '');
+		echo "replying: " . json_encode($result). PHP_EOL;
+		return $result;
+		break;
+ 	
+	default:
+		echo "Unknown Request Type";
+		return ['success' => false, 'message' => 'Unknown request type'];
+		break;		
+    }		
     return ['success' => false, 'message' => 'Unknown request type'];
 
-    }
+    
 }
 $server = new rabbitMQServer('testRabbitMQ.ini', 'testServer');
 
