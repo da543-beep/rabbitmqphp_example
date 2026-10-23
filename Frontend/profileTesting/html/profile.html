@@ -1,0 +1,174 @@
+<html>
+<script>
+
+function HandleLogoutRequest(username,session_key)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST", "logout.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function()
+
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleLogoutResponse(this.responseText);
+		}
+	}
+	request.send("type=logout&session_key="+session_key+"&username="+username);
+}
+
+function HandleLogoutResponse(response)
+{
+	var text = JSON.parse(response);
+	if (text["success"] === true)
+	{
+		document.cookie = "SessionTest=; Max-age=0; path=/;";
+		document.cookie = "SessionUsername=; Max-age=0; path=/;";
+		window.location.href = "index.html"
+	}
+	else
+	{
+		alert("Logout Failed");
+	}
+}
+function HandleGameRegistrationResponse(response)
+{
+	var text = JSON.parse(response);
+	//document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text)
+	if (text["success"] == true)
+	{
+		alert("Game Registration Successful");
+	}
+	else
+	{
+		alert("Game Registration Failed: " + text["message"]);
+	}
+
+function SendGameRegistration(game_name, platform)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","library.php","true"); //check name
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange = function()
+	{
+	if ((this.readyState == 4)&&(this.status == 200))
+	{
+		HandleGameRegistrationResponse(this.responseText);
+	}
+	}
+	request.send("type=addOwnedGame&game_name="+game_name+"&platform="+platform);
+}
+
+function viewLibrary(username)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST", "addfilenameheere", "true");
+	request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	request.onreadystatechange = function()
+	{
+		if((this.readyState == 4)&&(this.status == 200))
+		{
+			var text = JSON.parse(this.responseText);
+			alert(text);
+			//the above lines need to be changed to actually print the repsonse
+		}
+	}
+}			
+
+
+function HandleSessionResponse(response)
+{
+	var text = JSON.parse(response);
+//document.getElementById("textResponse").innerHTML = response+"<p>";
+//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+
+if (text["success"] !== true)
+{
+
+	alert("Session expired or failed: " + text["message"]);
+	window.location.href = "index.html";
+}
+
+}
+function SendSessionRequest(session_key)
+{
+var request = new XMLHttpRequest();
+request.open("POST","validateSession.php",true); //check file name
+request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+request.onreadystatechange= function ()
+{
+
+if ((this.readyState == 4)&&(this.status == 200))
+{
+HandleSessionResponse(this.responseText);
+}
+}
+request.send("type=session_validate&session_key="+session_key);
+}
+</script>
+
+<p id="cookieOutput"></p>
+<script>
+	window.onload = function()
+	{
+		const cookies = document.cookie
+			.split(";")
+			.map(c => c.trim());
+
+		const sessionCookie = cookies.find(
+			c => c.startsWith("SessionTest=")
+		);
+
+		const usernameCookie = cookies.find(
+			c => c.startsWith("SessionUsername=")
+		);
+
+		const session_key = sessionCookie
+		? decodeURIComponent(
+			sessionCookie.substring("SessionTest=".length)
+			)
+		: "";
+
+		const username = usernameCookie
+		? decodeURIComponent(
+			usernameCookie.substring("SessionUsername=".length)
+			)
+		: "";
+
+
+		document.getElementById("logoutButton").onclick = function ()
+		{
+			HandleLogoutRequest(username, session_key);
+		};
+
+
+</script>
+
+<body>
+	<h1>Profile</h1>
+	<button type="button" onclick="window.location.href='landing.html'">Main Page</button>
+	<button type="button" id="logoutButton">Logout</button>
+	<br>
+	<button type="button" onclick="window.location.href='discussion.html'">Join our disscussion post</button>
+
+
+	<h2>Add a Game to Your Library</h2>
+	<form onsubmit="SendGameRegistration(document.getElementById('game_name').value,
+		document.getElementById('platform').value; return false;">
+	<label for="game_name">Game Name:</label>
+	<input type="text" id="game_name" name="game_name">
+
+	<br><br>
+
+	<label for="platform">Platform:</label>
+	<input type="text" id="platform" name="platform">
+	</form>
+	<br><br>
+	
+	<button type="button" onclick="viewLibrary(usernameCookie)">View Library</button>
+	
+</body>
+</script>
+</html>
+
