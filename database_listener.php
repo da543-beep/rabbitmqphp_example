@@ -303,7 +303,7 @@ function requestProcessor($request)
             $result = doRegistration($request['username'], $request['email'], $request['password']);
 
 	    echo "replying: " . json_encode($result) . PHP_EOL;
-	    return $result
+	    return $result;
 	    break;
 	    
 	case 'login':
