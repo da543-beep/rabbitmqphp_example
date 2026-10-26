@@ -17,7 +17,7 @@ $query = "
 	cover.url;
 
 	sort name desc;
-	limit 100;";
+	limit 500;";
 
 $url = curl_init("https://api.igdb.com/v4/games");
 
