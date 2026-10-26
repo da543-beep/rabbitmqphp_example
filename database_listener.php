@@ -289,6 +289,16 @@ function doSearch($game, $genre, $platform)
 
 	 }
 }
+
+function doGetLibrary($sessionKey){
+	$db = getDB();
+	if ($db === null){
+		return ['success' => false, 'message' => 'DB unavailable'];
+	}
+	try{
+		$username
+	}
+}
  
 function requestProcessor($request)
 {
