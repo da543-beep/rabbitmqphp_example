@@ -63,15 +63,22 @@ function DisplayGames(games)
 	games.forEach(function(game)
 	{
 		var card = document.createElement("article");
+		
 		var title = document.createElement("h2");
 		title.textContent = game.name || "Untitled game";
+		
 		var genres = document.createElement("p");
 		genres.textContent = "Genres: " + (game.genre || "Unavailable");
+		
+		var platform = doument.createElement("p");
+		platform.textContent = "Platforms: " + (game.platform || "Unavailable");
+
 		var releaseDate = document.createElement("p");
 		releaseDate.textContent = "Release date: " + (game.releaseDate || "Unavailable");
 
 		card.appendChild(title);
 		card.appendChild(genres);
+		card.appendChile(platform);
 		card.appendChild(releaseDate);
 
 		results.appendChild(card);
