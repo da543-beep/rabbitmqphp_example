@@ -289,14 +289,79 @@ function doSearch($game, $genre, $platform)
 
 	 }
 }
-
+function getUserFromSession($db, $sessionKey){
+	if (!is_string($sessionKey || $session === ''){
+		$stmt = $db->("SELECT username FROM users WHERE session_key = ?? AND session_expires > NOW()");
+		$stmt->bind_param('s', $sessionKey);
+		$stmt->execute();
+		$stmt->bind_result($username);
+		$found = $stmt->fetch();
+		$stmt->close();
+		return $found ? $username : null;
+	}
+}
 function doGetLibrary($sessionKey){
 	$db = getDB();
 	if ($db === null){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$username
+		$username = getUserFromSession($db, $sessionKey);
+		if ($username === null){
+			$db->close();
+			return ['success' => false, 'message' => 'Session expired or invalid'];
+		}
+
+		$stmt = $db->prepare("SELECT g.gameID, g.URL, g.genre, g.platform, g.releaseDate, l.added_at FROM user_library l JOIN games g ON g.gameID = l.gameID WHERE l.username = ? ORDER BY l.added_at DESC"  );
+		$stmt->bind_param('s', $username);
+		$stmt->execute();
+		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+		$stmt->close();
+		$db->close();
+
+		echo "Library for $username: " . count($rows) . " games" . PHP_EOL;
+		return ['success' => true, 'count' => count($rows), 'games' => $rows];
+	} catch (mysqli_sql_exception $e){
+		echo "Library fetch error: " . $e->getMessage() . PHP_EOL;
+		$db->close();
+		return ['success' => false, 'message' => 'Could not load'];
+	}
+}
+
+function doAddToLibrary($session, $gameID){
+	if (!is_numeric($gameID)) {
+		return ['success' => false, 'message' => 'Invalid game ID'];
+	}
+	$gamrID = (int)$gameID;
+	$db = getDb();
+	if ($db === null) {
+		$db->close();
+		return ['success' => false, 'message' => 'Session expired or Invalid'];
+	}
+	try {
+		$username = getUserFromSession($db, $sessionKey);
+		if ($username === null){
+			$db->close();
+			return ['success' => false, 'message' => 'Session expired or invalid'];
+		}
+		$stmt = $db->prpepare("INSERT INTO user_library (username, gameID) VALUES(?, ?)");
+		$stmt->bind_param('si', $username, $gameID);
+		$stmt->execute();
+		$stmt->close();
+		$db->close();
+
+		echo "Library add: $username -> game $gamedID" . PHP_EOL;
+		return ['success' => true, 'already_in_library' => false];
+	} catch (mysqli_sql_exception $e) {
+		$db->close();
+		if($e->getCode() == 1062) { // dups already in library
+			return ['success' => true, 'already_in_library' => true];
+		}
+		if($e->getCode() == 1452){
+			return ['success' => false, 'message' => 'Game not found'];
+		}
+		echo "Library add error: " . $e->getMessage() . PHP_EOL;
+		return ['success' => false, 'message' => 'Could not add to library'];
 	}
 }
  
@@ -355,7 +420,22 @@ function requestProcessor($request)
 		echo "replying: " . json_encode($result). PHP_EOL;
 		return $result;
 		break;
- 	
+	case 'add_to_library':
+		if(!isset($request['session_key'], $request['gameID'])){
+			return ['success' => false, 'message' => 'Missing Fields'];
+		}
+		$result = doAddToLibrary($request['session_key'], $request['gameID']);
+		echo "replying: " . json_encode($result) . PHP_EOL;
+		return $result
+		break;
+	case 'get_library':
+		if (!isset($request['session_key'])){
+			return ['session' => false, 'message' => 'Missing session key'];
+		}
+		$result = doGetLibrary($request['session_key']);
+		echo "replying: " . json_encode($result) .PHP_EOL;
+		return $result;
+		break;
 	default:
 		echo "Unknown Request Type";
 		return ['success' => false, 'message' => 'Unknown request type'];
