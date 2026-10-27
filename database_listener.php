@@ -290,19 +290,11 @@ function doSearch($game, $genre, $platform)
 	 }
 }
 function doGetLibrary($username){
-	if (!validateUsername($username)){
-		return ['success' => false, 'message' => 'Username invalid'];
-	}
 	$db = getDB();
 	if ($db === null){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		if (!userExists($db, $username)){
-			$db->close();
-			return ['success' => false, 'message' => 'User not found'];
-		}
-
 		$stmt = $db->prepare("SELECT g.game_name, g.platform, l.added_at FROM user_library l JOIN games g ON g.game_name = l.game_name WHERE l.username = ? ORDER BY l.added_at DESC"  );
 		$stmt->bind_param('s', $username);
 		$stmt->execute();
@@ -320,25 +312,17 @@ function doGetLibrary($username){
 }
 
 function doAddToLibrary($username, $game_name){
-	if (!validUsername($username)){
-		return ['success' => false, 'message' => 'Username invalid'];
-	}
 	$game_name = is_string($game_name) ? trim($game_name) : '';
 	if ($game_name === ''){
-		return ['success' => false, 'message' => 'Game name required']
+		return ['success' => false, 'message' => 'Game name required'];
 	}
 	$db = getDb();
 	if ($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$game_name = game_name($db, $game_name);
-		if ($game_name === null){
-			$db->close();
-			return ['success' => false, 'message' => 'Game not found'];
-		}
 		$stmt = $db->prpepare("INSERT INTO user_library (username, game_name) VALUES(?, ?)");
-		$stmt->bind_param('si', $username, $game_name);
+		$stmt->bind_param('ss', $username, $game_name);
 		$stmt->execute();
 		$stmt->close();
 		$db->close();
@@ -347,12 +331,6 @@ function doAddToLibrary($username, $game_name){
 		return ['success' => true, 'already_in_library' => false];
 	} catch (mysqli_sql_exception $e) {
 		$db->close();
-		if($e->getCode() == 1062) { // dups already in library
-			return ['success' => true, 'already_in_library' => true];
-		}
-		if($e->getCode() == 1452){ // game doesn't exist
-			return ['success' => false, 'message' => 'Game not found'];
-		}
 		echo "Library add error: " . $e->getMessage() . PHP_EOL;
 		return ['success' => false, 'message' => 'Could not add to library'];
 	}
