@@ -341,7 +341,10 @@ function doAddToLibrary($username, $game_name, $platform){
 }
 
 function doAddReview($username, $game_name, $rating, $review){
-
+	$db = getDB();
+	if($db === null) {
+		return ['success' => false, 'message' => 'DB unavailable'];
+	}
 }
 
 function doGetReview($game_name){
