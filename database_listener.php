@@ -339,6 +339,13 @@ function doAddToLibrary($username, $game_name, $platform){
 		return ['success' => false, 'message' => 'Could not add to library'];
 	}
 }
+
+function doAddReview($username, $game_name, $rating, $review){
+
+}
+
+function doGetReview($game_name){
+}
  
 function requestProcessor($request)
 {
