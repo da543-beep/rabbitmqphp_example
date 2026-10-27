@@ -269,7 +269,7 @@ function doSearch($game, $genre, $platform)
 		 if ($where) {
 			 $sql .=" WHERE " . implode(' AND ', $where);
 		 }
-		 $sql .= " ORDER BY name LIMIT 100";
+		 $sql .= " ORDER BY RAND()";
 
 		 $stmt=$db->prepare("$sql");
 		 if ($params) {
