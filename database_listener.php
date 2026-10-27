@@ -295,7 +295,7 @@ function doGetLibrary($username){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("SELECT g.game_name, l.platform, l.added_at FROM user_library l JOIN games g ON g.game_name = l.game_name WHERE l.username = ? ORDER BY l.added_at DESC"  );
+		$stmt = $db->prepare("SELECT l.game_name, l.platform, l.added_at FROM user_libraryi l WHERE l.username = ? ORDER BY l.added_at DESC"  );
 		$stmt->bind_param('s', $username);
 		$stmt->execute();
 		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
