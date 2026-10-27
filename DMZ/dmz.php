@@ -16,7 +16,6 @@ $query = "
 	release_dates.human,
 	cover.url;
 
-	sort name desc;
 	limit 500;";
 
 $url = curl_init("https://api.igdb.com/v4/games");
