@@ -397,7 +397,7 @@ function requestProcessor($request)
 		}
 		$result = doAddToLibrary($request['username'], $request['game_name']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
-		return $result
+		return $result;
 		break;
 	case 'get_library':
 		if (!isset($request['username'])){
