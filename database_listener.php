@@ -325,7 +325,7 @@ function doAddToLibrary($username, $game_name){
 	}
 	$game_name = is_string($game_name) ? trim($game_name) : '';
 	if ($game_name === ''){
-		return ['success' => false, 'message' => 'Game name required']
+		return ['success' => false, 'message' => 'Game name required'];
 	}
 	$db = getDb();
 	if ($db === null) {
@@ -419,7 +419,7 @@ function requestProcessor($request)
 		}
 		$result = doAddToLibrary($request['username'], $request['game_name']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
-		return $result
+		return $result;
 		break;
 	case 'get_library':
 		if (!isset($request['username'])){
