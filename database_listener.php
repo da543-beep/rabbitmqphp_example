@@ -340,20 +340,55 @@ function doAddToLibrary($username, $game_name, $platform){
 	}
 }
 
-function doAddReview($username, $game_name, $rating, $review){
+function doAddReview($user_id, $game_id, $rating, $review_text){
 	$db = getDB();
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
+	if (!is_numeric($rating) || (int)$rating < 0 || (int)$rating > 5 || (float)$rating != (int)$rating{
+		return ['sucess' => false, 'message' => 'Invalid rating'];
+	}
+	try{
+		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
+		$rating = (int)$rating;
+		$stmt->bind_param("iiis", $user_id, $game_id, $rating, $review_text);
+		$stmt->execute();
+		$db->close();
+
+		return['success' => true, 'message' => 'Review added'];
+	} catch (mysqli_sql_exception $e){
+		error_log("Review error: " . $e->getMessage());
+		$db->close();
+
+		return ['success' => false, 'message' => 'Could not add a review'];
+	}
 }
 
-function doGetReview($game_name){
+function doGetReview($game_id){
+	$db = getDB();
+	if ($db === null) {
+		return ['success' => false, 'message' => 'DB unavailable'];
+	}
+	try {
+		$stmt = $db->prepare("SELECT user_id, rating, review_text, created_at FROM reviews WHERE game_id =?");
+		$stmt->bind_param("i", $game_id);
+		$stnt->execute();
+		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+		$stmt->close();
+		$db->close();
+
+		return ['success' =>ntrue, 'count' => count($rows), 'reviews' => $rows
+	} catch (mysqli_sql_exception $e) {
+		error_log("Review fetch error: " . $e->getMessage());
+		$db->close();
+
+		return ['success' => false, 'message' => 'Could not load review'];
+	}
 }
  
 function requestProcessor($request)
 {
     echo "received request of type: " . ($request['type'] ?? 'none') . PHP_EOL;
-
     switch (strtolower($request['type'])) {
 
    	 case 'registration':
@@ -422,6 +457,16 @@ function requestProcessor($request)
 		echo "replying: " . json_encode($result) .PHP_EOL;
 		return $result;
 		break;
+	case 'AddReview':
+		$result = doAddReview($request['user_id'], $request['gamed_id'], $request['rating'], $request['review_text'];
+		echo "replying: " json_encode($result) .PHP_EOL;
+		return $result;
+		break;
+	case 'GetReviews':
+		$result = d0GetReview($result['game_id']);
+		echo "replying: " json_encode($result) . PHP_EOL;
+		return $result;
+		break;	
 	default:
 		echo "Unknown Request Type";
 		return ['success' => false, 'message' => 'Unknown request type'];
