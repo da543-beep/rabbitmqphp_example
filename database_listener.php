@@ -328,7 +328,7 @@ function doAddToLibrary($username, $game_name, $platform){
 		$db->close();
 
 		echo "Library add: $username -> game $game_name ($platform)" . PHP_EOL;
-		return ['success' => true, 'message: ' => 'Game added successful!'];
+		return ['success' => true, 'message: ' => 'Game added successful!', 'game' => $game_name ];
 	} catch (mysqli_sql_exception $e) {
 		$db->close();
 		echo "Library add error: " . $e->getMessage() . PHP_EOL;
