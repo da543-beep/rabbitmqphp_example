@@ -323,21 +323,21 @@ function doAddToLibrary($username, $game_name){
 	if (!validUsername($username)){
 		return ['success' => false, 'message' => 'Username invalid'];
 	}
-	if (!is_numeric($game_name)) {
-		return ['success' => false, 'message' => 'Invalid game name'];
+	$game_name = is_string($game_name) ? trim($game_name) : '';
+	if ($game_name === ''){
+		return ['success' => false, 'message' => 'Game name required']
 	}
-	$game_name = (int)$game_name;
 	$db = getDb();
 	if ($db === null) {
-		$db->close();
-		return ['success' => false, 'message' => 'Session expired or Invalid'];
+		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		if (!userExists($db, $username){
+		$game_name = game_name($db, $game_name);
+		if ($game_name === null){
 			$db->close();
-			return ['success' => false, 'message' => 'User not found'];
+			return ['success' => false, 'message' => 'Game not found'];
 		}
-		$stmt = $db->prpepare("INSERT INTO user_library (username, gameID) VALUES(?, ?)");
+		$stmt = $db->prpepare("INSERT INTO user_library (username, game_name) VALUES(?, ?)");
 		$stmt->bind_param('si', $username, $game_name);
 		$stmt->execute();
 		$stmt->close();
