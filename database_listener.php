@@ -328,9 +328,8 @@ function doAddToLibrary($username, $game_name, $platform){
 		$db->close();
 
 		echo "Library add: $username -> game $game_name ($platform)" . PHP_EOL;
-<<<<<<< HEAD
+
 		return ['success' => true, 'message: ' => 'Game added successful!', 'game' => $game_name ];
-=======
 
 		return ['success' => true, 'already_in_library' => false];
 
