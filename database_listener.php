@@ -295,7 +295,7 @@ function doGetLibrary($username){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("SELECT game_name, platform, FROM library WHERE username = ?"  );
+		$stmt = $db->prepare("SELECT game_name, platform FROM library WHERE user_name = ?"  );
 		$stmt->bind_param('s', $username);
 		$stmt->execute();
 		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
