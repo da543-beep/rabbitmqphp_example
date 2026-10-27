@@ -19,9 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure username and password were provided.
+ * Make sure game name or genre were provided. Subject to change
  */
-if (!isset($_POST["username"]) || !isset($_POST["password"]))
+/*
+if (!isset($_POST["game_name"]) || (!isset($_POST["genre"])))
 {
     echo json_encode([
         "success" => false,
@@ -29,14 +30,14 @@ if (!isset($_POST["username"]) || !isset($_POST["password"]))
     ]);
     exit;
 }
-
-$username = $_POST["username"];
-$password = $_POST["password"];
+ */
+$username = $_POST["username"]; //subject to change
+//$genre = $_POST["genre"]; // subject to change
 
 try
 {
     /*
-     * Connect to your existing RabbitMQ configuration.
+     * Connect to existing RabbitMQ configuration.
      */
     $client = new rabbitMQClient(
         "/var/www/rabbitmq/testRabbitMQ.ini",
@@ -44,14 +45,15 @@ try
     );
 
     /*
-     * Build the login request.
-     * This matches your existing RabbitMQ client.
+     * Build the registration request.
+     * This matches existing RabbitMQ client.
      */
     $request = array();
 
-    $request["type"] = "Login";
+    $request["type"] = "get_library";
     $request["username"] = $username;
-    $request["password"] = $password;
+    //$request["genre"] = $genre;
+    //$request["platform"] = $platform;
 
     /*
      * Send the request through RabbitMQ.

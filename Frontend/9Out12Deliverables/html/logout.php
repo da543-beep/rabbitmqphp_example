@@ -19,24 +19,24 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure username and password were provided.
+ * Make sure username and session key were provided.
  */
-if (!isset($_POST["username"]) || !isset($_POST["password"]))
+if (!isset($_POST["session_key"]) || !isset($_POST["username"]))
 {
     echo json_encode([
         "success" => false,
-        "message" => "Username and password are required"
+        "message" => "Username or Session is wrong"
     ]);
     exit;
 }
 
 $username = $_POST["username"];
-$password = $_POST["password"];
+$session_key = $_POST["session_key"];
 
 try
 {
     /*
-     * Connect to your existing RabbitMQ configuration.
+     * Connect to existing RabbitMQ configuration.
      */
     $client = new rabbitMQClient(
         "/var/www/rabbitmq/testRabbitMQ.ini",
@@ -45,13 +45,13 @@ try
 
     /*
      * Build the login request.
-     * This matches your existing RabbitMQ client.
+     * This matches existing RabbitMQ client.
      */
     $request = array();
 
-    $request["type"] = "Login";
+    $request["type"] = "logout";
     $request["username"] = $username;
-    $request["password"] = $password;
+    $request["session_key"] = $session_key;
 
     /*
      * Send the request through RabbitMQ.

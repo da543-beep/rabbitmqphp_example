@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure username and password were provided.
+ * Make sure username, password, and email were provided.
  */
 if (!isset($_POST["uname"]) || !isset($_POST["pword"]) || !isset($_POST["email"]))
 {
@@ -37,7 +37,7 @@ $email = $_POST["email"];
 try
 {
     /*
-     * Connect to your existing RabbitMQ configuration.
+     * Connect to existing RabbitMQ configuration.
      */
     $client = new rabbitMQClient(
         "/var/www/rabbitmq/testRabbitMQ.ini",
@@ -46,7 +46,7 @@ try
 
     /*
      * Build the registration request.
-     * This matches your existing RabbitMQ client.
+     * This matches existing RabbitMQ client.
      */
     $request = array();
 

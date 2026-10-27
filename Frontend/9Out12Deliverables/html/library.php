@@ -19,23 +19,25 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure session is there.
+ * Make sure username, password, and email were provided.
  */
-if ( !isset($_POST["session_key"]))
+if (!isset($_POST["username"]) || !isset($_POST["game_name"]) || !isset($_POST["platform"]))
 {
     echo json_encode([
         "success" => false,
-        "message" => "Session is not the same"
+        "message" => "Game name and platform are required"
     ]);
     exit;
 }
 
-$session = $_POST["session_key"];
+$username = $_POST["username"];
+$game_name = $_POST["game_name"];
+$platform = $_POST["platform"];
 
 try
 {
     /*
-     * Connect to your existing RabbitMQ configuration.
+     * Connect to existing RabbitMQ configuration.
      */
     $client = new rabbitMQClient(
         "/var/www/rabbitmq/testRabbitMQ.ini",
@@ -43,12 +45,15 @@ try
     );
 
     /*
-     * This matches your existing RabbitMQ client.
+     * Build the registration request.
+     * This matches existing RabbitMQ client.
      */
     $request = array();
 
-    $request["type"] = "validate_session";
-    $request["session_key"] = $session;
+    $request["type"] = "add_to_library";
+    $request["username"] = $username;
+    $request["game_name"] = $game_name;
+    $request["platform"] = $platform;
 
     /*
      * Send the request through RabbitMQ.

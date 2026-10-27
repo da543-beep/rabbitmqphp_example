@@ -19,9 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 }
 
 /*
- * Make sure username and password were provided.
+ * Make sure game name or genre were provided. Subject to change
  */
-if (!isset($_POST["uname"]) || !isset($_POST["pword"]) || !isset($_POST["email"]))
+/*
+if (!isset($_POST["game_name"]) || (!isset($_POST["genre"])))
 {
     echo json_encode([
         "success" => false,
@@ -29,15 +30,15 @@ if (!isset($_POST["uname"]) || !isset($_POST["pword"]) || !isset($_POST["email"]
     ]);
     exit;
 }
-
-$username = $_POST["uname"];
-$password = $_POST["pword"];
-$email = $_POST["email"];
+ */
+$game_name = $_POST["gameName"]; //subject to change
+$genre = $_POST["genre"]; // subject to change
+$platform = $_POST["platform"];
 
 try
 {
     /*
-     * Connect to your existing RabbitMQ configuration.
+     * Connect to existing RabbitMQ configuration.
      */
     $client = new rabbitMQClient(
         "/var/www/rabbitmq/testRabbitMQ.ini",
@@ -46,14 +47,14 @@ try
 
     /*
      * Build the registration request.
-     * This matches your existing RabbitMQ client.
+     * This matches existing RabbitMQ client.
      */
     $request = array();
 
-    $request["type"] = "Registration";
-    $request["username"] = $username;
-    $request["password"] = $password;
-    $request["email"] = $email;
+    $request["type"] = "Search";
+    $request["name"] = $game_name;
+    $request["genre"] = $genre;
+    $request["platform"] = $platform;
 
     /*
      * Send the request through RabbitMQ.
