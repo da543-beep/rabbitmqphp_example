@@ -295,7 +295,7 @@ function doGetLibrary($username){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("SELECT l.game_name, l.platform, l.added_at FROM user_library l WHERE l.username = ? ORDER BY l.added_at DESC"  );
+		$stmt = $db->prepare("SELECT l.game_name, l.platform, l.added_at FROM library l WHERE l.username = ? ORDER BY l.added_at DESC"  );
 		$stmt->bind_param('s', $username);
 		$stmt->execute();
 		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -321,7 +321,7 @@ function doAddToLibrary($username, $game_name, $platform){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("INSERT INTO user_library (username, game_name, platform) VALUES(?, ?, ?)");
+		$stmt = $db->prepare("INSERT INTO library (username, game_name, platform) VALUES(?, ?, ?)");
 		$stmt->bind_param('sss', $username, $game_name, $platform);
 		$stmt->execute();
 		$stmt->close();
