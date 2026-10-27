@@ -1,0 +1,40 @@
+<html>
+	<head>
+		</title>Game Details</title>
+	</head>
+
+<body>
+	<h1 id="gameTitle"></h1>
+	
+	<img id="gameImage" width="300">
+	<p id="gameGenre"></p>
+	<p id="gamePlatform"></p>
+	<p id="gameReleaseDate"></p>
+
+	<a href="landing.html">Back to Landing</a>
+
+	<script>
+		var storedGame = sessionStorage.getItem("selectedGame");
+
+		if (storedGame)
+		{
+			var game = JSON.parse(storedGame);
+
+			document.getElementById("gameTitle").textContent = game.name;
+
+			document.getElementById("gameGenre").textContent = "Genres: " + game.genre;
+
+			document.getElementById("gamePlatform").textContent = "Plaforms: " + game.platform;
+
+			document.getElementById("gameReleaseDate").textContent = "Release Date: " + game.releaseDate;
+
+			document.getElementById("gameImage").src = game.URL;
+		}
+
+	</script>
+</body>
+</html>
+
+
+			
+

@@ -63,26 +63,20 @@ function DisplayGames(games)
 	games.forEach(function(game)
 	{
 		var card = document.createElement("article");
-		
-		var title = document.createElement("h2");
-		title.textContent = game.name || "Untitled game";
-		
-		var genres = document.createElement("p");
-		genres.textContent = "Genres: " + (game.genre || "Unavailable");
-		
-		var platform = document.createElement("p");
-		platform.textContent = "Platforms: " + (game.platform || "Unavailable");
+	
+		var title = document.createElement("a");
+		title.textContent = game.name;
+		title.href = "game.html";
 
-		var releaseDate = document.createElement("p");
-		releaseDate.textContent = "Release date: " + (game.releaseDate || "Unavailable");
-
+		title.addEventListener("click", function()
+			{
+				sessionStorage.setItem("selectedGame", JSON.stringify(game));
+			});
+		
 		card.appendChild(title);
-		card.appendChild(genres);
-		card.appendChild(platform);
-		card.appendChild(releaseDate);
-
 		results.appendChild(card);
 	});
+	
 }
 
 
