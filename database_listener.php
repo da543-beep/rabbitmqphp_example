@@ -295,7 +295,12 @@ function doGetLibrary($username){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("SELECT game_name, platform FROM library WHERE user_name = ?"  );
+		$stmt = $db->prepare("SELECT g.gameID, g.name, g.URL, g.genre, g.platform, g.releaseDate, l.added_at 
+		FROM library l
+		JOIN games g ON g.gameID = l.game_id
+		WHERE l.user_name = ?
+		ORDER BY l.added_at DESC"  );
+
 		$stmt->bind_param('s', $username);
 		$stmt->execute();
 		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -311,25 +316,22 @@ function doGetLibrary($username){
 	}
 }
 
-function doAddToLibrary($username, $game_name, $platform){
-	$game_name = is_string($game_name) ? trim($game_name) : '';
-	if ($game_name === ''){
-		return ['success' => false, 'message' => 'Game name required'];
-	}
+function doAddToLibrary($username, $game_id){
+
 	$db = getDb();
 	if ($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("INSERT INTO library (user_name, game_name, platform) VALUES(?, ?, ?)");
-		$stmt->bind_param('sss', $username, $game_name, $platform);
+		$stmt = $db->prepare("INSERT INTO library (user_name, game_id) VALUES(?, ?)");
+		$stmt->bind_param('si', $username, $game_id);
 		$stmt->execute();
 		$stmt->close();
 		$db->close();
 
-		echo "Library add: $username -> game $game_name ($platform)" . PHP_EOL;
+		echo "Added game: " . $game_id ." to library of ". $username . PHP_EOL;
 
-		return ['success' => true, 'message: ' => 'Game added successful!', 'game' => $game_name ];
+		return ['success' => true, 'message: ' => 'Game added successful!', 'game' => $game_id ];
 
 		return ['success' => true, 'already_in_library' => false];
 
@@ -347,7 +349,8 @@ function doAddReview($username, $game_name, $rating, $review){
 	}
 }
 
-function doGetReview($game_name){
+function doGetReview($game_name)
+{
 }
  
 function requestProcessor($request)
@@ -406,11 +409,10 @@ function requestProcessor($request)
 		return $result;
 		break;
 	case 'add_to_library':
-		if(!isset($request['username'], $request['game_name'], $request['platform'])){
-			echo "replying: ". $request['platform'] . PHP_EOL;
+		if(!isset($request['username'], $request['game_id'])){
 			return ['success' => false, 'message' => 'Missing Fields'];
 	}
-		$result = doAddToLibrary($request['username'], $request['game_name'], $request['platform']);
+		$result = doAddToLibrary($request['username'], $request['game_id']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;
