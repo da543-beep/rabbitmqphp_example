@@ -321,14 +321,14 @@ function doAddToLibrary($username, $game_name, $platform){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("INSERT INTO library (username, game_name, platform) VALUES(?, ?, ?)");
+		$stmt = $db->prepare("INSERT INTO library (user_name, game_name, platform) VALUES(?, ?, ?)");
 		$stmt->bind_param('sss', $username, $game_name, $platform);
 		$stmt->execute();
 		$stmt->close();
 		$db->close();
 
-		echo "Library add: $username -> game $gamed_name ($platform)" . PHP_EOL;
-		return ['success' => true, 'already_in_library' => false];
+		echo "Library add: $username -> game $game_name ($platform)" . PHP_EOL;
+		return ['success' => true, 'message: ' => 'Game added successful!'];
 	} catch (mysqli_sql_exception $e) {
 		$db->close();
 		echo "Library add error: " . $e->getMessage() . PHP_EOL;
@@ -393,8 +393,9 @@ function requestProcessor($request)
 		break;
 	case 'add_to_library':
 		if(!isset($request['username'], $request['game_name'], $request['platform'])){
+			echo "replying: ". $request['platform'] . PHP_EOL;
 			return ['success' => false, 'message' => 'Missing Fields'];
-		}
+	}
 		$result = doAddToLibrary($request['username'], $request['game_name'], $request['platform']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
