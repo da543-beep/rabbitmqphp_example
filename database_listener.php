@@ -245,7 +245,7 @@ function doSearch($game, $genre, $platform)
 {
 	$game=is_string($game) ? trim($game) : '';
 	$genre=is_string($genre) ? trim($genre) : '';
-	$platform=is_string($genre) ? trim($genre) : '';
+	$platform=is_string($platform) ? trim($platform) : '';
 
 	 $db = getDb();
                 if ($db === null) {
@@ -262,8 +262,8 @@ function doSearch($game, $genre, $platform)
 		 $params=[];
 
 		 if($game !== '') {$where[] = "name LIKE ?"; $params[]='%' . $game . '%'; }
-		 if($genre !== '') {$where[] = "genres LIKE ?"; $params[]='%' . $genre . '%';}
-		if($platform !== '') {$where[] = "platforms LIKE ?"; $params[]='%' . $platform . '%';}
+		 if($genre !== '') {$where[] = "genre LIKE ?"; $params[]='%' . $genre . '%';}
+		if($platform !== '') {$where[] = "platform LIKE ?"; $params[]='%' . $platform . '%';}
 		
 		 $sql="SELECT gameID, name, URL, genre, platform, releaseDate FROM games";
 		 if ($where) {
