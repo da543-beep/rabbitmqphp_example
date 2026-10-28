@@ -1,0 +1,281 @@
+<html>
+	<head>
+		</title>Game Details</title>
+	</head>
+
+<body>
+	<h1 id="gameTitle"></h1>
+	
+	<img id="gameImage" width="300">
+	<p id="gameGenre"></p>
+	<p id="gamePlatform"></p>
+	<p id="gameReleaseDate"></p>
+	
+	<h2>Write a Review</h2>
+
+    	<label for="reviewRating">Rating:</label>
+    	<select id="reviewRating">
+        	<option value="">Select a rating</option>
+        	<option value="0">0/5</option>
+        	<option value="1">1/5</option>
+        	<option value="2">2/5</option>
+	        <option value="3">3/5</option>
+        	<option value="4">4/5</option>
+	        <option value="5">5/5</option>
+	</select>
+
+	<br><br>
+
+    	<label for="reviewComment">Comment (optional):</label>
+    	<br>
+    	<textarea id="reviewComment" rows="4" cols="40"></textarea>
+    	<br>
+
+    	<button type="button" id="submitReviewButton" onclick="SubmitReview()">Submit Review</button>
+	<p id="reviewStatus"></p>
+
+   	 <h2>All Reviews</h2>
+   	 <div id="reviews">Saved reviews have not been loaded.</div>
+
+	<script>
+
+		window.onload = function()
+		{
+		const cookies = document.cookie
+			.split(";")
+			.map(c => c.trim());
+
+		const sessionCookie = cookies.find(
+			c => c.startsWith("SessionTest=")
+		);
+
+		const usernameCookie = cookies.find(
+			c => c.startsWith("SessionUsername=")
+		);
+
+		const session_key = sessionCookie
+		? decodeURIComponent(
+			sessionCookie.substring("SessionTest=".length)
+			)
+		: "";
+
+		window.username = usernameCookie
+		? decodeURIComponent(
+			usernameCookie.substring("SessionUsername=".length)
+			)
+		: "";
+
+
+		document.getElementById("logoutButton").onclick = function ()
+		{
+			HandleLogoutRequest(username, session_key);
+		};
+		
+			SendSessionRequest(session_key);
+			ViewReview();
+		};
+
+		
+
+		function HandleGameRegistrationResponse(response)
+		{
+			var text = JSON.parse(response);
+			//document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text)
+			if (text["success"] == true)
+			{
+				alert("Game Registration Successful");
+			}
+			else
+			{
+			alert("Game Registration Failed: " + text["message"]);
+			}
+		}
+
+		function SendGameRegistration(username, game_id)
+		{
+			username = window.username;
+			var request = new XMLHttpRequest();
+			request.open("POST","library.php","true"); //check name
+			request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+			request.onreadystatechange = function()
+			{
+			if ((this.readyState == 4)&&(this.status == 200))
+			{
+			HandleGameRegistrationResponse(this.responseText);
+			}
+			}
+			request.send("type=add_to_library&username="+username+"&game_id="+game_id);
+			//request.send("type=add_to_library&game_name="+game_name+"&platform="+platform);
+		}
+
+		function HandleSessionResponse(response)
+		{
+			var text = JSON.parse(response);
+			//document.getElementById("textResponse").innerHTML = response+"<p>";
+			//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+			//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+			if (text["success"] !== true)
+			{
+				alert("Session expired or failed: " + text["message"]);
+				window.location.href = "index.html";
+			}
+
+		}
+		
+		function SendSessionRequest(session_key)
+		{
+			var request = new XMLHttpRequest();
+			request.open("POST","validateSession.php",true); //check file name
+			request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+			request.onreadystatechange= function ()
+			{
+			if ((this.readyState == 4)&&(this.status == 200))
+			{
+				HandleSessionResponse(this.responseText);
+			}
+			}
+			request.send("type=session_validate&session_key="+session_key);
+		}
+
+
+		function SubmitReview()
+        	{	
+            		var rating = document.getElementById("reviewRating").value;
+            		var review_text = document.getElementById("reviewComment").value.trim();
+
+            		if (!game || game.gameID == null)
+            		{
+               			 alert("The selected game is missing its game ID.");
+               			 return;
+            		}
+			/*
+            		if (rating === "" || !Number.isInteger(Number(rating)) || Number(rating) < 0 || Number(rating) > 5)
+			{
+                		alert("Please select a rating from 0 to 5.");
+                		return;
+           		 }
+			*/
+           		 var request = new XMLHttpRequest();
+            		request.open("POST", "addReview.php", true);
+            		request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+
+            		request.onreadystatechange = function()
+            		{
+                		if ((this.readyState === 4) && (this.status === 200))
+                		{
+					HandleReviewResponse(this.responseText);
+				}		
+            		};
+
+            		request.send("type=add_review&user_name="+username+"&game_id="+game.gameID+"&rating="+rating+"&review_text="+review_text);
+
+        	}
+
+        	function HandleReviewResponse(response)
+        	{		
+            		var text = JSON.parse(response);
+      
+            		if (text && text.success === true)
+            		{
+                		document.getElementById("reviewStatus").textContent = "Review saved.";
+				document.getElementById("reviewRating").value = "";
+                		document.getElementById("reviewComment").value = "";
+				alert("It worked yay");
+            		}
+            		else
+            		{
+                		document.getElementById("reviewStatus").textContent = (text && text.message) || "Review could not be saved.";
+				alert("Fuck you");
+            		}
+        	}	
+
+        // Call this when the backend returns all reviews for this game.
+        // Expected fields: username, review, comment.
+       		function DisplayReviews(reviews)
+        	{	
+            		var results = document.getElementById("reviews");
+            		results.replaceChildren();
+
+            		if (reviews.length === 0)
+            		{
+                		results.textContent = "No reviews yet.";
+                		return;
+            		}
+
+            		reviews.forEach(function(review)
+            		{
+                		var card = document.createElement("article");
+
+               			var username = document.createElement("h3");
+                		username.textContent = review.user_name;
+
+                		var rating = document.createElement("p");
+                		rating.textContent = "Rating: " + review.rating + "/5";
+
+                		var comment = document.createElement("p");
+				comment.textContent = review.review_text || "";
+
+                		card.appendChild(username);
+                		card.appendChild(rating);
+                		card.appendChild(comment);
+                		card.appendChild(document.createElement("hr"));
+
+                		results.appendChild(card);
+            		});
+        	}
+
+		function ViewReview()
+		{
+			
+			var request = new XMLHttpRequest();
+			request.open("POST", "viewReview.php", "true"); //check name
+			request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			request.onreadystatechange = function()
+			{
+				if((this.readyState == 4)&&(this.status == 200))
+				{
+				var text = JSON.parse(this.responseText);
+				DisplayReviews(text.reviews);
+				//the above lines need to be changed to actually print the repsonse
+				}	
+			}	
+			request.send("type=get_review&game_id="+game.gameID);
+		}				
+
+
+		var storedGame = sessionStorage.getItem("selectedGame");
+
+		if (storedGame)
+		{
+			var game = JSON.parse(storedGame);
+
+			document.getElementById("gameTitle").textContent = game.name;
+
+			document.getElementById("gameGenre").textContent = "Genres: " + game.genre;
+
+			document.getElementById("gamePlatform").textContent = "Plaforms: " + game.platform;
+
+			document.getElementById("gameReleaseDate").textContent = "Release Date: " + game.releaseDate;
+
+			document.getElementById("gameImage").src = game.URL.replace("t_thumb", "t_cover_big");
+		}
+
+	</script>
+
+
+	<br><br>
+
+	<button type="button" onclick="SendGameRegistration(window.username, game.gameID);">Add This Game To Your Library</button>
+	
+	<br><br>
+	<button type="button" onclick="window.location.href='landing.html'">Main Page</button>
+	<button type="button" id="logoutButton">Logout</button>
+	<br>
+	<button type="button" onclick="window.location.href='discussion.html'">Join our disscussion post</button>
+
+</body>
+</html>
+
+
+			
+
