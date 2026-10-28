@@ -37,7 +37,6 @@ function doRegistration($username, $email, $password)
         return ['success' => false, 'message' => 'Requires password asshole!'];
     }
 
-    // 2. Connect to MySQL.
     $db = getDb();
     if ($db === null) {
 	    return ['success' => false, 'message' => 'Database unavailable'];
@@ -45,7 +44,6 @@ function doRegistration($username, $email, $password)
     }
 
 
-    // 4. Insert with a prepared statement (protects against SQL injection).
     try {
         $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->bind_param('sss', $username, $email, $password);
@@ -53,12 +51,11 @@ function doRegistration($username, $email, $password)
         $stmt->close();
         $db->close();
 
-	echo "Registered user: " . $username . PHP_EOL;   // never print the password
+	echo "Registered user: " . $username . PHP_EOL; 
         return ['success' => true];
     } catch (mysqli_sql_exception $e) {
         $db->close();
 
-        // 1062 = duplicate entry (username or email already in the table)
         if ($e->getCode() == 1062) {
             return ['success' => false, 'message' => 'Username or email already exists'];
         }
@@ -68,7 +65,6 @@ function doRegistration($username, $email, $password)
 }
 
 function doValidate($sessionKey){
-	//connects to database
 	$db = getDb();
 		if ($db === null) {
 			return ['success' => false, 'message' => 'Database unavailable'];
@@ -125,7 +121,6 @@ function doLogin($username, $password){
 	$stmt->close();
 
 	if ($found && ($password===$storedPassword)) {
-		//generate session_key here
 		$sessionKey = bin2hex(random_bytes(32));
 		$stmt = $db->prepare("UPDATE users SET session_key = ?, session_expires = DATE_ADD(NOW(), INTERVAL 2 MINUTE) WHERE username=?");
 		$stmt->bind_param('ss', $sessionKey, $username);
@@ -251,11 +246,7 @@ function doSearch($game, $genre, $platform)
                 if ($db === null) {
                         return ['success' => false, 'message' => 'Database unavailable'];
                 }
-	 //if user inputs game 
-	 //if user only searchs for game, the game is returned alongside similar games names
-	 //if user prints inputs only all genres with no game name or platforms, whole database is returned
-	 //if user inputs platforms, only that game with that specified platform prints 
-	 //
+	 
 	 try
 	 {
 		 $where=[];
