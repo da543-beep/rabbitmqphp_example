@@ -345,8 +345,8 @@ function doAddReview($user_id, $game_id, $rating, $review_text){
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
-	if (!is_numeric($rating) || (int)$rating < 0 || (int)$rating > 5 || (float)$rating != (int)$rating{
-		return ['sucess' => false, 'message' => 'Invalid rating'];
+	if (!is_numeric($rating) || (int)$rating < 0 || (int)$rating > 5 || (float)$rating != (int)$rating){
+		return ['success' => false, 'message' => 'Invalid rating'];
 	}
 	try{
 		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
@@ -377,7 +377,7 @@ function doGetReview($game_id){
 		$stmt->close();
 		$db->close();
 
-		return ['success' =>true, 'count' => count($rows), 'reviews' => $rows
+		return ['success' =>true, 'count' => count($rows), 'reviews' => $rows];
 	} catch (mysqli_sql_exception $e) {
 		error_log("Review fetch error: " . $e->getMessage());
 		$db->close();
@@ -457,14 +457,14 @@ function requestProcessor($request)
 		echo "replying: " . json_encode($result) .PHP_EOL;
 		return $result;
 		break;
-	case 'AddReview':
-		$result = doAddReview($request['user_id'], $request['gamed_id'], $request['rating'], $request['review_text'];
-		echo "replying: " json_encode($result) .PHP_EOL;
+	case 'add_review':
+		$result = doAddReview($request['user_id'], $request['gamed_id'], $request['rating'], $request['review_text']);
+		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;
-	case 'GetReviews':
-		$result = d0GetReview($result['game_id']);
-		echo "replying: " json_encode($result) . PHP_EOL;
+	case 'get_review':
+		$result = doGetReview($result['game_id']);
+		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;	
 	default:
