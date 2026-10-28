@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST")
 /*
  * Make sure username, password, and email were provided.
  */
-if (!isset($_POST["username"]) || !isset($_POST["game_name"]) || !isset($_POST["platform"]))
+if (!isset($_POST["username"]) || !isset($_POST["game_id"]) )
 {
     echo json_encode([
         "success" => false,
@@ -31,8 +31,7 @@ if (!isset($_POST["username"]) || !isset($_POST["game_name"]) || !isset($_POST["
 }
 
 $username = $_POST["username"];
-$game_name = $_POST["game_name"];
-$platform = $_POST["platform"];
+$game_id = $_POST["game_id"];
 
 try
 {
@@ -52,9 +51,7 @@ try
 
     $request["type"] = "add_to_library";
     $request["username"] = $username;
-    $request["game_name"] = $game_name;
-    $request["platform"] = $platform;
-
+    $request["game_id"] = $game_id;
     /*
      * Send the request through RabbitMQ.
      */

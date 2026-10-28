@@ -31,35 +31,6 @@ function HandleLogoutResponse(response)
 		alert("Logout Failed");
 	}
 }
-function HandleGameRegistrationResponse(response)
-{
-	var text = JSON.parse(response);
-	//document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text)
-	if (text["success"] == true)
-	{
-		alert("Game Registration Successful: " + (text["game"]));
-	}
-	else
-	{
-		alert("Game Registration Failed: " + text["message"]);
-	}
-}
-function SendGameRegistration(username, game_name, platform)
-{
-	username = window.username;
-	var request = new XMLHttpRequest();
-	request.open("POST","library.php","true"); //check name
-	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-	request.onreadystatechange = function()
-	{
-	if ((this.readyState == 4)&&(this.status == 200))
-	{
-		HandleGameRegistrationResponse(this.responseText);
-	}
-	}
-	request.send("type=add_to_library&username="+username+"&game_name="+game_name+"&platform="+platform);
-	//request.send("type=add_to_library&game_name="+game_name+"&platform="+platform);
-}
 
 function DisplaySavedGames(games)
 {
@@ -71,14 +42,14 @@ function DisplaySavedGames(games)
 		document.getElementById("libraryResults").textContent = "No saved games found.";
 		return;
 	}
-	document.getElementById("libraryResults").textContent = "Showing library containing " + games.length + "game(s).";
+	document.getElementById("libraryResults").textContent = "Showing library containing " + games.length + " game(s).";
 
 	games.forEach(function(game)
 	{
 		var card = document.createElement("article");
 
 		var title = document.createElement("h2");
-		title.textContent = game.game_name;
+		title.textContent = game.name;
 
 		var platform = document.createElement("p");
 		platform.textContent = "Platform: " + (game.platform);
@@ -106,21 +77,6 @@ function ViewLibrary(username)
 	request.send("type=get_library&username="+username);
 }			
 
-function HandleLibraryResponse(response)
-{
-	var text = JSON.parse(response);
-	if (!text || text.success !== true)
-	{
-		document.getElementById("libraryResults").textContent = (text && text.message) || "No added games";
-		return;
-	}
-	if (!Array.isArray(text.games))
-	{
-		document.getElementById("libraryResults").textContent = "No valid game saved";
-		return;
-	}
-	DisplaySavedGames(text.games);
-}
 
 function HandleSessionResponse(response)
 {
@@ -204,23 +160,6 @@ function SendSessionRequest(session_key)
 	<button type="button" onclick="window.location.href='discussion.html'">Join our disscussion post</button>
 
 
-	<h2>Add a Game to Your Library</h2>
-	<form>
-	<label for="game_name">Game Name:</label>
-	<input type="text" id="game_name" name="game_name">
-
-	<br><br>
-
-	<label for="platform">Platform:</label>
-	<input type="text" id="platform" name="platform">
-	
-	<br><br>
-
-	<button type="button" onclick="SendGameRegistration(window.username, 
-		document.getElementById('game_name').value,
-		document.getElementById('platform').value);">Add Game</button>
-
-	</form>
 	<br><br>
 	
 	<button type="button" id="viewLibraryButton">View Library</button>

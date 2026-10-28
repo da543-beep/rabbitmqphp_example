@@ -32,7 +32,6 @@ if (!isset($_POST["game_name"]) || (!isset($_POST["genre"])))
 }
  */
 $username = $_POST["username"]; //subject to change
-//$genre = $_POST["genre"]; // subject to change
 
 try
 {
@@ -52,9 +51,6 @@ try
 
     $request["type"] = "get_library";
     $request["username"] = $username;
-    //$request["genre"] = $genre;
-    //$request["platform"] = $platform;
-
     /*
      * Send the request through RabbitMQ.
      */
