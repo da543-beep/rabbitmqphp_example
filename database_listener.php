@@ -127,7 +127,7 @@ function doLogin($username, $password){
 	if ($found && ($password===$storedPassword)) {
 		//generate session_key here
 		$sessionKey = bin2hex(random_bytes(32));
-		$stmt = $db->prepare("UPDATE users SET session_key = ?, session_expires = DATE_ADD(NOW(), INTERVAL 2 MINUTE) WHERE username=?");
+		$stmt = $db->prepare("UPDATE users SET session_key = ?, session_expires = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE username=?");
 		$stmt->bind_param('ss', $sessionKey, $username);
 		$stmt->execute();
 		$stmt->close();
