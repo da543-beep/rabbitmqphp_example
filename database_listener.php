@@ -347,7 +347,7 @@ function doAddReview($user_name, $game_id, $rating, $review_text){
 	}
 	if (!in_array((string)$rating, ['0', '1', '2', '3', '4', '5'], true)){
 		$db->close();
-		return ['sucess' => false, 'message' => 'Invalid rating'];
+		return;
 	}
 	try{
 		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
