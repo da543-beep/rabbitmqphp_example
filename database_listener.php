@@ -353,7 +353,6 @@ function doAddReview($user_name, $game_id, $rating, $review_text){
 	}
 }
 
-<<<<<<< HEAD
 function doGetReview($game_id){
 	$db = getDB();
 	if ($db === null) {
@@ -374,10 +373,6 @@ function doGetReview($game_id){
 
 		return ['success' => false, 'message' => 'Could not load review'];
 	}
-=======
-function doGetReview($game_name)
-{
->>>>>>> mavinsNewDatabase
 }
  
 function requestProcessor($request)
