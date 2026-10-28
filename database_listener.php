@@ -345,10 +345,8 @@ function doAddReview($user_name, $game_id, $rating, $review_text){
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
-
-	}
 	try{
-		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
+		$stmt = $db->prepare("INSERT INTO reviews(user_name, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
 		$stmt->bind_param("siss", $user_name, $game_id, $rating, $review_text);
 		$stmt->execute();
 		$db->close();
@@ -368,9 +366,9 @@ function doGetReview($game_id){
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try {
-		$stmt = $db->prepare("SELECT user_id, rating, review_text, created_at FROM reviews WHERE game_id =?");
+		$stmt = $db->prepare("SELECT user_name, rating, review_text, created_at FROM reviews WHERE game_id =?");
 		$stmt->bind_param("i", $game_id);
-		$stnt->execute();
+		$stmt->execute();
 		$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 		$stmt->close();
 		$db->close();
@@ -461,7 +459,7 @@ function requestProcessor($request)
 		return $result;
 		break;
 	case 'get_review':
-		$result = doGetReview($result['game_id']);
+		$result = doGetReview($request['game_id']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;	
