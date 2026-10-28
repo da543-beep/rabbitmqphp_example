@@ -340,18 +340,19 @@ function doAddToLibrary($username, $game_name, $platform){
 	}
 }
 
-function doAddReview($user_id, $game_id, $rating, $review_text){
+function doAddReview($user_name, $game_id, $rating, $review_text){
 	$db = getDB();
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
-	if (!is_numeric($rating) || (int)$rating < 0 || (int)$rating > 5 || (float)$rating != (int)$rating){
+
+	if (!in_array((string)$rating, ['0', '1', '2', '3', '4', '5'], true)){
+		$db->close();
 		return ['success' => false, 'message' => 'Invalid rating'];
 	}
 	try{
 		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
-		$rating = (int)$rating;
-		$stmt->bind_param("siis", $user_id, $game_id, $rating, $review_text);
+		$stmt->bind_param("siss", $user_name, $game_id, $rating, $review_text);
 		$stmt->execute();
 		$db->close();
 
@@ -458,7 +459,7 @@ function requestProcessor($request)
 		return $result;
 		break;
 	case 'add_review':
-		$result = doAddReview($request['user_id'], $request['gamed_id'], $request['rating'], $request['review_text']);
+		$result = doAddReview($request['user_name'], $request['game_id'], $request['rating'], $request['review_text']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;
