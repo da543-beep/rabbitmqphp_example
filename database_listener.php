@@ -351,7 +351,7 @@ function doAddReview($user_id, $game_id, $rating, $review_text){
 	try{
 		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
 		$rating = (int)$rating;
-		$stmt->bind_param("iiis", $user_id, $game_id, $rating, $review_text);
+		$stmt->bind_param("siis", $user_id, $game_id, $rating, $review_text);
 		$stmt->execute();
 		$db->close();
 
@@ -377,7 +377,7 @@ function doGetReview($game_id){
 		$stmt->close();
 		$db->close();
 
-		return ['success' =>ntrue, 'count' => count($rows), 'reviews' => $rows
+		return ['success' =>true, 'count' => count($rows), 'reviews' => $rows
 	} catch (mysqli_sql_exception $e) {
 		error_log("Review fetch error: " . $e->getMessage());
 		$db->close();
