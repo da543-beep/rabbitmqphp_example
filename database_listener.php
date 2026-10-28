@@ -345,13 +345,13 @@ function doAddReview($user_name, $game_id, $rating, $review_text){
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
-	if (!is_numeric($rating) || (int)$rating < 0 || (int)$rating > 5 || (float)$rating != (int)$rating{
+	if (!in_array((string)$rating, ['0', '1', '2', '3', '4', '5'], true)){
+		$db->close();
 		return ['sucess' => false, 'message' => 'Invalid rating'];
 	}
 	try{
 		$stmt = $db->prepare("INSERT INTO reviews(user_id, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
-		$rating = (int)$rating;
-		$stmt->bind_param("siis", $user_name, $game_id, $rating, $review_text);
+		$stmt->bind_param("siss", $user_name, $game_id, $rating, $review_text);
 		$stmt->execute();
 		$db->close();
 
