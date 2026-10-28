@@ -3,40 +3,40 @@
 
 function HandleLoginResponse(response)
 {
-var text = JSON.parse(response);
-// document.getElementById("textResponse").innerHTML = response+"<p>";
-//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text);
+	var text = JSON.parse(response);
+	// document.getElementById("textResponse").innerHTML = response+"<p>";
+	//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+	document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text);
 
-if (text["success"] == true)
-{
-let SessionTest = text["session_key"]; 
-let SessionUsername = text["username"];
-document.cookie = "SessionTest=" + encodeURIComponent(SessionTest) + "; path=/; SameSite=Lax;";
-document.cookie = "SessionUsername=" + encodeURIComponent(SessionUsername) + "; path=/; SameSite=Lax;";
-window.location.href = "landing.html";
-}
-else {
-alert("Login Failed: " + text["message"]);
-}
+	if (text["success"] == true)
+	{
+		let SessionTest = text["session_key"]; 
+		let SessionUsername = text["username"];
+		document.cookie = "SessionTest=" + encodeURIComponent(SessionTest) + "; path=/; SameSite=Lax;";
+		document.cookie = "SessionUsername=" + encodeURIComponent(SessionUsername) + "; path=/; SameSite=Lax;";
+		window.location.href = "landing.html";
+	}
+	else {
+		alert("Login Failed: " + text["message"]);
+	}
 
 }
 
 
 function SendLoginRequest(username,password)
 {
-var request = new XMLHttpRequest();
-request.open("POST","login.php",true);
-request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-request.onreadystatechange= function ()
-{
+	var request = new XMLHttpRequest();
+	request.open("POST","login.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function ()
+	{
 
-if ((this.readyState == 4)&&(this.status == 200))
-{
-HandleLoginResponse(this.responseText);
-}
-}
-request.send("type=login&username="+username+"&password="+password);
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleLoginResponse(this.responseText);
+		}
+	}
+	request.send("type=login&username="+username+"&password="+password);
 }
 </script>
 

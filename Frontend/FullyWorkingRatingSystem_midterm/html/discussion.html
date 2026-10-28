@@ -3,12 +3,12 @@
 
 function HandleSessionResponse(response)
 {
-var text = JSON.parse(response);
-//document.getElementById("textResponse").innerHTML = response+"<p>";
-//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+	var text = JSON.parse(response);
+	//document.getElementById("textResponse").innerHTML = response+"<p>";
+	//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+	//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
 
-if (text["success"] !== true)
+	if (text["success"] !== true)
 	{	
 		alert("Session expired or failed: " + text["message"]);
 		window.location.href = "index.html";
@@ -28,7 +28,7 @@ function SendSessionRequest(session_key)
 			HandleSessionResponse(this.responseText);
 		}
 	}
-request.send("type=session_validate&session_key="+session_key);
+	request.send("type=session_validate&session_key="+session_key);
 }
 </script>
 <p id="cookieOutput"></p>

@@ -37,12 +37,12 @@ function HandleLogoutResponse(response)
 
 function HandleSessionResponse(response)
 {
-var text = JSON.parse(response);
-//document.getElementById("textResponse").innerHTML = response+"<p>";
-//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+	var text = JSON.parse(response);
+	//document.getElementById("textResponse").innerHTML = response+"<p>";
+	//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+	//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
 
-if (text["success"] !== true)
+	if (text["success"] !== true)
 	{	
 		alert("Session expired or failed: " + text["message"]);
 		window.location.href = "index.html";

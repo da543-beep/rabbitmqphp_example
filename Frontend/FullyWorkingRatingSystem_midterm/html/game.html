@@ -148,14 +148,7 @@
                			 alert("The selected game is missing its game ID.");
                			 return;
             		}
-			/*
-            		if (rating === "" || !Number.isInteger(Number(rating)) || Number(rating) < 0 || Number(rating) > 5)
-			{
-                		alert("Please select a rating from 0 to 5.");
-                		return;
-           		 }
-			*/
-           		 var request = new XMLHttpRequest();
+           		var request = new XMLHttpRequest();
             		request.open("POST", "addReview.php", true);
             		request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
 
@@ -189,8 +182,7 @@
             		}
         	}	
 
-        // Call this when the backend returns all reviews for this game.
-        // Expected fields: username, review, comment.
+        	// Call this when the backend returns all reviews for this game.
        		function DisplayReviews(reviews)
         	{	
             		var results = document.getElementById("reviews");
@@ -236,7 +228,6 @@
 				{
 				var text = JSON.parse(this.responseText);
 				DisplayReviews(text.reviews);
-				//the above lines need to be changed to actually print the repsonse
 				}	
 			}	
 			request.send("type=get_review&game_id="+game.gameID);

@@ -3,35 +3,35 @@
 
 function HandleRegistrationResponse(response)
 {
-var text = JSON.parse(response);
-// document.getElementById("textResponse").innerHTML = response+"<p>";
-document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text); //This is for checking the output
+	var text = JSON.parse(response);
+	// document.getElementById("textResponse").innerHTML = response+"<p>";
+	document.getElementById("textResponse").textContent = "response: " + JSON.stringify(text); //This is for checking the output
 
-if (text["success"] == true)
-{
-alert("Registration Successful");
-}
-else {
-alert("Registration Failed: " + text["message"]);
-}
+	if (text["success"] == true)
+	{
+		alert("Registration Successful");
+	}
+	else {
+		alert("Registration Failed: " + text["message"]);
+	}
 
 }
 
 function SendRegistrationRequest(username,password,email)
 {
-var request = new XMLHttpRequest();
-request.open("POST","registration.php",true);
-request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-request.onreadystatechange= function ()
-{
-if ((this.readyState == 4)&&(this.status == 200))
-{
-	console.log("HTTP Status:", this.status);
-	console.log("Response:", this.responseText);
-HandleRegistrationResponse(this.responseText);
-}
-}
-request.send("type=registration&uname="+username+"&pword="+password+"&email="+email);
+	var request = new XMLHttpRequest();
+	request.open("POST","registration.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function ()
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			console.log("HTTP Status:", this.status);
+			console.log("Response:", this.responseText);
+			HandleRegistrationResponse(this.responseText);
+		}
+	}
+	request.send("type=registration&uname="+username+"&pword="+password+"&email="+email);
 }
 </script>
 
