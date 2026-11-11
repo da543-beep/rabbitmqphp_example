@@ -1,0 +1,15 @@
+[Unit]
+
+Description=Runs db listener on start
+After=network-online.target mysql.service rabbitmq-server.service
+Wants=network-online.target mysql.service rabbitmq-server.service
+
+[Service]
+User=er386
+WorkingDirectory=/home/er386/witnesses/
+ExecStart=/usr/bin/php /home/er386/witnesses/database_listener.php
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
