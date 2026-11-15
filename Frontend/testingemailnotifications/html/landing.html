@@ -1,0 +1,231 @@
+<html>
+<script>
+
+function HandleLogoutRequest(username,session_key)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST", "logout.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function()
+
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleLogoutResponse(this.responseText);
+		}
+	}
+	request.send("type=logout&session_key="+session_key+"&username="+username);
+
+
+}
+
+function HandleLogoutResponse(response)
+{
+	var text = JSON.parse(response);
+	if (text["success"] === true)
+	{
+		document.cookie = "SessionTest=; Max-age=0; path=/;";
+		document.cookie = "SessionUsername=; Max-age=0; path=/;";
+		window.location.href = "index.html"
+	}
+	else
+	{
+		alert("Logout Failed");
+	}
+}
+
+
+function HandleSessionResponse(response)
+{
+var text = JSON.parse(response);
+//document.getElementById("textResponse").innerHTML = response+"<p>";
+//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+
+if (text["success"] !== true)
+	{	
+		alert("Session expired or failed: " + text["message"]);
+		window.location.href = "index.html";
+	}
+
+}
+
+function DisplayGames(games)
+{
+	var results = document.getElementById("searchResults");
+	results.replaceChildren(); //Remove results from previous search
+	if (games.length === 0)
+	{
+		document.getElementById("searchStatus").textContent = "No games found.";
+		return;
+	}
+	document.getElementById("searchStatus").textContent = "Showing " + games.length + " games(s).";
+	games.forEach(function(game)
+	{
+		var card = document.createElement("article");
+	
+		var title = document.createElement("a");
+		title.textContent = game.name;
+		title.href = "game.html";
+
+		title.addEventListener("click", function()
+			{
+				sessionStorage.setItem("selectedGame", JSON.stringify(game));
+			});
+		
+		card.appendChild(title);
+		results.appendChild(card);
+	});
+	
+}
+
+
+function HandleSearchResponse(response)
+{
+	var text = JSON.parse(response);
+	if (!text || text.success !== true)
+	{
+		document.getElementById("searchStatus").textContent = (text && text.message) || "Search Failed.";
+		return;
+	}
+
+	if (!Array.isArray(text.games))
+	{
+		document.getElementById("searchStatus").textContent = "Server did not return a valid game list.";
+		return;
+	}
+
+	DisplayGames(text.games);
+}
+
+function SendSearchData(game_name, genre, platform)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","searchData.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange = function()
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+		HandleSearchResponse(this.response);
+		}
+	}
+	request.send("type=search&gameName="+game_name+"&genre="+genre+"&platform="+platform);
+}
+
+function SendSessionRequest(session_key)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","validateSession.php",true); //check file name
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function ()
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleSessionResponse(this.responseText);
+		}
+	}
+request.send("type=session_validate&session_key="+session_key);
+}
+</script>
+
+<p id="cookieOutput"></p>
+<script>
+	window.onload = function()
+	{
+		const cookies = document.cookie
+			.split(";")
+			.map(c => c.trim());
+
+		const sessionCookie = cookies.find(
+			c => c.startsWith("SessionTest=")
+		);
+
+		const usernameCookie = cookies.find(
+			c => c.startsWith("SessionUsername=")
+		);
+
+		const session_key = sessionCookie
+		? decodeURIComponent(
+			sessionCookie.substring("SessionTest=".length)
+			)
+		: "";
+
+		const username = usernameCookie
+		? decodeURIComponent(
+			usernameCookie.substring("SessionUsername=".length)
+			)
+		: "";
+
+
+		document.getElementById("logoutButton").onclick = function ()
+		{
+			HandleLogoutRequest(username, session_key);
+		};
+//comment out
+		document.getElementById("searchButton").onclick = function()
+		{
+			var game_name = document.getElementById("gameName").value.trim();
+			var genre = document.getElementById("genre").value;
+			var platform = document.getElementById("platform").value;
+			SendSearchData(game_name, genre, platform);
+		};
+
+		SendSessionRequest(session_key);
+
+	};
+
+
+
+</script>
+
+<body>
+	<h1>Welcome User</h1>
+
+	<button type="button" onclick="window.location.href='profile.html'">Profile</button>
+	<button type="button" id="logoutButton">Logout</button>
+	<br>
+	<button type="button" onclick="window.location.href='discussion.html'">Join our disscussion post</button>
+
+	<form id="searchForm">
+		<label for="gameName">Game Name: </label> <!-- Text box search -->
+		<input
+			type="text"
+			id="gameName"
+			placeholder="Enter a name"
+		>
+		
+		<label for"genre">Genre: </label> <!-- Drop down search -->
+		<select id="genre" name="genre">
+			<option value="">All genres</option>
+			<option value="Indie">Indie</option>
+			<option value="Action">Action</option>
+			<option value="Adventure">Adventure</option>
+			<option value="Simulator">Simulator</option>
+			<option value="Shooter">Shooter</option>
+			<option value="Strategy">Strategy</option>
+			<option value="Role-playing (RPG)">Role Playing Game</option>
+			<option value="Visual Novel">Visual Novel</option>
+			<option value="Platform">Platformer</option>
+		</select>
+
+		<label for"platform">Console: </label>
+		<select id="platform" name="platform">
+			<option value="">All Platform</option>
+			<option value="PC">PC</option>
+			<option value="Xbox">Xbox</option>
+			<option value="Playstation">Playstation</option>
+			<option value="Nintendo">Nintendo</option>
+		</select>
+		<button type="button" id="searchButton">Search</button>
+	</form>
+
+	<p id="searchStatus">
+
+	<div id="searchResults"></div>
+	
+
+</body>
+</script>
+</html>
+
