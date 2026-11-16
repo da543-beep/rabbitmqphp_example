@@ -45,8 +45,9 @@ function doRegistration($username, $email, $password)
 
 
     try {
+	$hash=password_hash($password, PASSWORD_DEFAULT);
         $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-        $stmt->bind_param('sss', $username, $email, $password);
+        $stmt->bind_param('sss', $username, $email, $hash);
         $stmt->execute();
         $stmt->close();
         $db->close();
