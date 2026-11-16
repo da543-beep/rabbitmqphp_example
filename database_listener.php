@@ -114,10 +114,10 @@ function doLogin($username, $password){
 			return ['success' => false, 'message' => 'Database unavailable'];
 		}
 	try {
-        $stmt = $db->prepare("SELECT password FROM users WHERE username = ?");
+        $stmt = $db->prepare("SELECT password, email FROM users WHERE username = ?");
         $stmt->bind_param('s', $username);
 	$stmt->execute();
-	$stmt->bind_result($storedPassword);
+	$stmt->bind_result($storedPassword, $email);
 	$found = $stmt->fetch();
 	$stmt->close();
 
@@ -132,7 +132,7 @@ function doLogin($username, $password){
 		 
 		
 		echo "Logged in user: " . $username. PHP_EOL;
-		return ['success' => true, 'username'=> $username, 'session_key' => $sessionKey];
+		return ['success' => true, 'username'=> $username,'email' => $email, 'session_key' => $sessionKey];
 	}
 
         echo "Failed login for user: " . $username . PHP_EOL;  
