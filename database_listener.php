@@ -334,14 +334,14 @@ function doAddToLibrary($username, $game_id){
 	}
 }
 
-function doAddReview($user_name, $game_id, $rating, $review_text){
+function doAddReview($user_name, $game_id, $rating, $review_text, $game_name, $genre){
 	$db = getDB();
 	if($db === null) {
 		return ['success' => false, 'message' => 'DB unavailable'];
 	}
 	try{
-		$stmt = $db->prepare("INSERT INTO reviews(user_name, game_id, rating, review_text) VALUES (?, ?, ?, ?)");
-		$stmt->bind_param("siss", $user_name, $game_id, $rating, $review_text);
+		$stmt = $db->prepare("INSERT INTO reviews(user_name, game_id, rating, review_text, game_name, genre) VALUES (?, ?, ?, ?, ?, ?)");
+		$stmt->bind_param("sissss", $user_name, $game_id, $rating, $review_text, $game_name, $genre);
 		$stmt->execute();
 		$db->close();
 
@@ -375,7 +375,27 @@ function doGetReview($game_id){
 		return ['success' => false, 'message' => 'Could not load review'];
 	}
 }
- 
+
+function doGetRecommendations($genre){
+	echo "this shit better work";
+	$db = getDB();
+	echo "this shit better work";
+	if ($db === null){
+		return [ 'success' => false, 'message' => 'Database unavialable']; 
+	}
+	try {
+	$sql = "SELECT game_id, game_name, genre, ROUND(AVG(CAST(rating AS FLOAT(3,1))), 2) AS average_rating, COUNT(*) AS total_reviews FROM reviews WHERE rating REGEXP '^[0-5]$' GROUP BY game_id, game_name, genre ORDER BY average_rating DESC, total_reviews DESC LIMIT 10";
+	$result = $db->query($sql);
+	$games = $result->fetch_all(MYSQLI_ASSOC);
+	$db->close();
+	return [ 'success' => true, 'count' =>count($games), 'games' => $games];
+	} catch (mysqli_sql_exception $e) {
+		error_log("Recommendation error: " . $e->getMessage());
+		$db->close();
+		return [ 'success' => false, 'message' => 'Could not load recommendations'];
+	}
+}
+
 function requestProcessor($request)
 {
     echo "received request of type: " . ($request['type'] ?? 'none') . PHP_EOL;
@@ -447,12 +467,18 @@ function requestProcessor($request)
 		return $result;
 		break;
 	case 'add_review':
-		$result = doAddReview($request['user_name'], $request['game_id'], $request['rating'], $request['review_text']);
+		$result = doAddReview($request['user_name'], $request['game_id'], $request['rating'], $request['review_text'], $request['game_name'], $request['genre']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;
 	case 'get_review':
 		$result = doGetReview($request['game_id']);
+		echo "replying: " . json_encode($result) . PHP_EOL;
+		return $result;
+		break;
+	case 'get_rec':
+		echo "this shit better work";
+		$result = doGetRecommendations($request['genre']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;	
