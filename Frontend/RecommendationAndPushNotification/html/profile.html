@@ -1,0 +1,278 @@
+<html>
+<script>
+
+function HandleLogoutRequest(username,session_key)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST", "logout.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function()
+
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleLogoutResponse(this.responseText);
+		}
+	}
+	request.send("type=logout&session_key="+session_key+"&username="+username);
+}
+
+function HandleLogoutResponse(response)
+{
+	var text = JSON.parse(response);
+	if (text["success"] === true)
+	{
+		document.cookie = "SessionTest=; Max-age=0; path=/;";
+		document.cookie = "SessionUsername=; Max-age=0; path=/;";
+		window.location.href = "index.html"
+	}
+	else
+	{
+		alert("Logout Failed");
+	}
+}
+
+function DisplaySavedGames(games)
+{
+	var results = document.getElementById("libraryResults");
+	results.replaceChildren();
+
+	if (games.length === 0)
+	{
+		document.getElementById("libraryResults").textContent = "No saved games found.";
+		return;
+	}
+	document.getElementById("libraryResults").textContent = "Showing library containing " + games.length + " game(s).";
+
+	games.forEach(function(game)
+	{
+		var card = document.createElement("article");
+
+		var title = document.createElement("h2");
+		title.textContent = game.name;
+
+		var platform = document.createElement("p");
+		platform.textContent = "Platform: " + (game.platform);
+
+		card.appendChild(title);
+		card.appendChild(platform);
+		results.appendChild(card);
+	});
+}
+
+function ViewLibrary(username)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST", "viewLibrary.php", "true"); //check name
+	request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	request.onreadystatechange = function()
+	{
+		if((this.readyState == 4)&&(this.status == 200))
+		{
+			var text = JSON.parse(this.responseText);
+			DisplaySavedGames(text.games);
+			//the above lines need to be changed to actually print the repsonse
+		}
+	}
+	request.send("type=get_library&username="+username);
+}			
+
+
+function HandleSessionResponse(response)
+{
+	var text = JSON.parse(response);
+	//document.getElementById("textResponse").innerHTML = response+"<p>";
+	//document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+	//document.getElementById("welcomeResponse").textContent = "response: " + JSON.stringify(text["username"]);
+	if (text["success"] !== true)
+	{
+		alert("Session expired or failed: " + text["message"]);
+		window.location.href = "index.html";
+	}
+
+}
+// added code from here
+function DisplayGames(games)
+{
+	var results = document.getElementById("searchResults");
+	results.replaceChildren(); //Remove results from previous search
+	if (games.length === 0)
+	{
+		document.getElementById("searchStatus").textContent = "No games found.";
+		return;
+	}
+	//document.getElementById("searchStatus").textContent = "Showing " + games.length + " games(s).";
+	games.forEach(function(game)
+	{
+		var card = document.createElement("article");
+
+		var title = document.createElement("a");
+		title.textContent = game.game_name || ("Game #" + game.game_id);
+		title.href = "game.html";
+		//added code
+		var rating = document.createElement("p");
+		rating.textContent = "Average rating: " + (game.average_rating ?? "N/A") +"/5";
+		var reviews = document.createElement("p");
+		reviews.textContent = "Total reviews: " + (game.total_reviews ?? 0);
+		//end
+		title.addEventListener("click", function()
+			{
+				sessionStorage.setItem("selectedGame", JSON.stringify(game));
+			});
+		//console.log("cards displayed: ", results.children.length);
+		card.appendChild(title);
+		//add
+		card.appendChild(rating);
+		card.appendChild(reviews);
+		//end
+		results.appendChild(card);
+	});
+
+}
+
+function SendSessionRequest(session_key)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","validateSession.php",true); //check file name
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function ()
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleSessionResponse(this.responseText);
+		}
+	}
+	request.send("type=session_validate&session_key="+session_key);
+}
+
+function HandleSearchResponse(response)
+{
+	var text = JSON.parse(response);
+	if (!text || text.success !== true)
+	{
+		document.getElementById("searchStatus").textContent = (text && text.message) || "Search Failed.";
+		return;
+	}
+
+	if (!Array.isArray(text.games))
+	{
+		document.getElementById("searchStatus").textContent = "Server did not return a valid game list.";
+		return;
+	}
+
+	DisplayGames(text.games);
+}
+
+
+function SendSearchData(game_name, genre, platform)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","getRecommendation.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange = function()
+	{
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+		HandleSearchResponse(this.response);
+		}
+	}
+	request.send("type=get_rec&gameName="+game_name+"&genre="+genre+"&platform="+platform); //game name and platform is not needed
+}
+//end here
+
+</script>
+
+<p id="cookieOutput"></p>
+<script>
+	var username = "";
+	window.onload = function()
+	{
+		const cookies = document.cookie
+			.split(";")
+			.map(c => c.trim());
+
+		const sessionCookie = cookies.find(
+			c => c.startsWith("SessionTest=")
+		);
+
+		const usernameCookie = cookies.find(
+			c => c.startsWith("SessionUsername=")
+		);
+
+		const session_key = sessionCookie
+		? decodeURIComponent(
+			sessionCookie.substring("SessionTest=".length)
+			)
+		: "";
+
+		window.username = usernameCookie
+		? decodeURIComponent(
+			usernameCookie.substring("SessionUsername=".length)
+			)
+		: "";
+
+
+		document.getElementById("logoutButton").onclick = function ()
+		{
+			HandleLogoutRequest(username, session_key);
+		};
+		
+		document.getElementById("viewLibraryButton").onclick = function()
+		{
+			ViewLibrary(username);
+		};
+
+		document.getElementById("searchButton").onclick = function()
+		{
+			var game_name = "";// document.getElementById("gameName").value.trim();
+			var genre = document.getElementById("genre").value;
+			var platform = "";// document.getElementById("platform").value;
+			SendSearchData(game_name, genre, platform); //game name and platform removed
+		};
+
+
+		SendSessionRequest(session_key);
+	};
+
+</script>
+
+<body>
+	<h1>Profile</h1>
+	<button type="button" onclick="window.location.href='landing.html'">Main Page</button>
+	<button type="button" id="logoutButton">Logout</button>
+	<br>
+	<button type="button" onclick="window.location.href='discussion.html'">Join our disscussion post</button>
+
+
+	<br><br>
+	
+	<button type="button" id="viewLibraryButton">View Library</button>
+	<div id="libraryResults"></div>
+
+	<br><br>
+	<!--this testing for recommended -->
+	<h1>Get recommendation</h1>
+	<form id="searchForm">
+		<label for"genre">Genre: </label> <!-- Drop down search -->
+		<select id="genre" name="genre">
+			<option value="">All genres</option>
+			<option value="Indie">Indie</option>
+			<option value="Action">Action</option>
+			<option value="Adventure">Adventure</option>
+			<option value="Simulator">Simulator</option>
+			<option value="Shooter">Shooter</option>
+			<option value="Strategy">Strategy</option>
+			<option value="Role-playing (RPG)">Role Playing Game</option>
+			<option value="Visual Novel">Visual Novel</option>
+			<option value="Platform">Platformer</option>
+		</select>
+		<button type="button" id="searchButton">Search recommended genre</button>
+	</form>
+
+	<p id="searchStatus">
+
+	<div id="searchResults"></div>
+
+</body>
+</html>
+
