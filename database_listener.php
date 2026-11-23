@@ -418,6 +418,11 @@ function requestProcessor($request)
 		
 		$result = doLogin($request['username'], $request['password']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
+		//testing this shit
+		$request = array();
+		$request['type'] = "Log";
+		$request['message'] = 'testing this';
+		$repsonse = $client->send_request($request);
 		return $result;
 		break;
     		
@@ -485,6 +490,7 @@ function requestProcessor($request)
 	default:
 		echo "Unknown Request Type";
 		return ['success' => false, 'message' => 'Unknown request type'];
+
 		break;		
     }		
     return ['success' => false, 'message' => 'Unknown request type'];
