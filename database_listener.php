@@ -60,7 +60,7 @@ function sendMFACode($username)
 		'username' => $username,
 		'password' => $password);
 
-	$smpt = Mail::factory ('smtp', $params);
+	$stmt = Mail::factory ('stmt', $params);
 	$mail = $smtp->send($to, $headers, $email_body);
 	
 	return ['success' => true];
@@ -482,11 +482,6 @@ function requestProcessor($request)
 		
 		$result = doLogin($request['username'], $request['password']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
-		//testing this shit
-		$request = array();
-		$request['type'] = "Log";
-		$request['message'] = 'testing this';
-		$repsonse = $client->send_request($request);
 		return $result;
 		break;
     		
@@ -550,7 +545,7 @@ function requestProcessor($request)
 		$result = doGetRecommendations($request['genre']);
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
-		break;	
+		break;
 	case 'mfa': //added this case for mfa
 		$result = SendMFACode($request['username']);
 		echo "replying: ". json_encode(result . PHP_EOL);

@@ -1,4 +1,5 @@
 <?php
+/*
 require_once __DIR__ .'/SdLogs.php';
 $paths = explode (':', getenv('W_Logs') ?: '');
 $files = [];
@@ -12,4 +13,5 @@ foreach ($paths as $path) {
 	}
 	$files
 }
+ */
 ?>

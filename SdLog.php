@@ -1,4 +1,6 @@
+
 <?php
+/*
 require_once __DIR__ . '/vender/autoload.php';
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPStreamConnection;
@@ -33,4 +35,5 @@ if (isset($_'SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __F
 		}
 		exit)SdLog($message, $service, $level) ? 0 : 1);
 }
+ */
 ?>
