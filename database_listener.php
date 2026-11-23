@@ -4,6 +4,70 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
+//working on MFA, created the sendMFACode function
+//need to change logic in doLogin and login case statement
+//also added the mfa in the requestProcessor case statement
+require_once "Mail.php";
+require_once "Mail/smtp.php";
+function sendMFACode($username)
+{
+	$host = "ssl://smtp.gmail.com";
+	$username = getenv("ADMIN_EMAIL");
+	$password = getenv("ADMIN_PASSWORD");
+	$port = "465";
+
+	$db = getDb();
+	$mfa_code = random_int(100000, 999999);
+
+	//getting the email address based on the username
+	$stmt = $db->prepare("SELECT email FROM users WHERE username = ?");
+	$stmt->bind_param('s', $username);
+	$stmt->execute;
+	$stmt->bind_result($email);
+	$stmt->close;
+	
+	//inserting code into table at that username
+	$stmt = $db->prepare("UPDATE users SET mfa_code = ? WHERE username = ?");
+	$stmt->bind_param('is', $mfa_code, $username);
+	$stmt->execute;
+	$stmt->close;
+
+
+	$db->close;
+
+	
+
+	echo "User and email found";
+	$to = $email;
+	$email_from = getenv("ADMIN_EMAIL");
+	
+	$email_subject = "Your Multi Factor Authentication Code";
+	$email_body = "Your MFA Code is $mfa_code";
+	$email_address = getenv("ADMIN_EMAIL");
+	$content = "text/html; charset=utf-8";
+	$mime = "1.0";
+
+	$headers = array ('From' => $email_from,
+		'To' => $to,
+		'Subject' => $email_subject,
+		'Reply-To' => $email_address,
+		'MIME-Version' => $mime,
+		'Content-Type' => $content);
+
+	$params = array ('host' => $host,
+		'port' => $port,
+		'auth' => true,
+		'username' => $username,
+		'password' => $password);
+
+	$smpt = Mail::factory ('smtp', $params);
+	$mail = $smtp->send($to, $headers, $email_body);
+	
+	return ['success' => true];
+
+}
+
+
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 function getDb()
@@ -487,6 +551,11 @@ function requestProcessor($request)
 		echo "replying: " . json_encode($result) . PHP_EOL;
 		return $result;
 		break;	
+	case 'mfa': //added this case for mfa
+		$result = SendMFACode($request['username']);
+		echo "replying: ". json_encode(result . PHP_EOL);
+		return $result;
+		break;
 	default:
 		echo "Unknown Request Type";
 		return ['success' => false, 'message' => 'Unknown request type'];
