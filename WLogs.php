@@ -14,7 +14,7 @@ foreach ($paths as $path) {
 }
 
 if (!$files) {
-	die("No files reable\n")
+	die("No files reable\n");
 }
 echo "Monitoring" . count ($files) . "log files\n";
 while (true) {
@@ -42,11 +42,15 @@ while (true) {
 		$line = trim($line);
 		if ($line != ''){
 			$level = preg_match( '/error|failed|fatal|exception/', $line) ? 'ERROR' : 'INFO';
-			if (!SdLog($line, basename($path), $levle)){
+			if (!SdLog($line, basename($path), $level)){
 				break;
 			}
 		}
 		$offset = $newOffset;
+	}
+	fclose($handle);
+	$files[$path] = $offset;
 }
+
  
 ?>
