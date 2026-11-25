@@ -20,7 +20,7 @@ echo "Monitoring" . count ($files) . "log files\n";
 while (true) {
 	foreach ($files as $path => $offset) {
 		clearstatcache(true, $path);
-	}
+	
 	$size = filesize($path);
 	if ($size < $offset) {
 		$offset = 0;
@@ -50,7 +50,8 @@ while (true) {
 	}
 	fclose($handle);
 	$files[$path] = $offset;
+    }
+	sleep(2);
 }
-
  
 ?>

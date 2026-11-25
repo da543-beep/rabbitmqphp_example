@@ -1,5 +1,4 @@
 <?php
-/*
 require_once __DIR__ . '/vender/autoload.php';
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 $queueName = getenv('LoggingQueue');
@@ -40,5 +39,5 @@ $channel->basic_consume($queueName, '', false, false, false, false, $callback);
 while ($channel->is_consuming()){
 	$channel->wait();
 }
- */
+ 
 ?>
