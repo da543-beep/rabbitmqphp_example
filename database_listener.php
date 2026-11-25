@@ -61,7 +61,7 @@ function sendMFACode($username)
 		'password' => $password);
 
 	$stmt = Mail::factory ('stmt', $params);
-	$mail = $smtp->send($to, $headers, $email_body);
+	$mail = $stmt->send($to, $headers, $email_body);
 	
 	return ['success' => true];
 
