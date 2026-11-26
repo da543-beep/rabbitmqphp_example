@@ -5,16 +5,16 @@ $queueName = getenv('LOG_QUEUE');
 if (!$queueName){
 	die("Queue required\n");
 }
-$connection = new AMQPStreamConnection(getenv('RABBITMQ_HOST') ?: 'localhost', 5672, 'test', getenv('RABBITMQ_PASSWORD'), 'tesHostt');
+$connection = new AMQPStreamConnection(getenv('RABBITMQ_HOST') ?: 'localhost', 5672, 'test', getenv('RABBITMQ_PASSWORD'), 'tesHost');
 $channel = $connection->channel();
-$channel->exhcange_declare('LoggingExchange', 'fanout', false, true, false);
+$channel->exhchange_declare('LoggingExchange', 'fanout', false, true, false);
 $channel->queue_declare($queueName, false, true, false, false);
 $channel->queue_bind($queueName, 'LoggingExchange');
 $logDir = __DIR__ . '/logs';
 if(!is_dir($logDir)){
 	mkdir($logDir, 0750, true);
 }
-$logFile = $logDir . '/recieved-events.logs';
+$logFile = $logDir . '/recieved-events.log';
 $callback = function ($msg) use ($logFile) {
 	try{
 		$data = json_decode($msg->body, true, 512, JSON_THROW_ON_ERROR);
