@@ -9,9 +9,9 @@ function sendLog($message, $service = 'system', $level = 'ERROR'){
 	$connection = null;
 	$channel = null;
 	try {
-		$connection = new AMQPStreamConnection( getenv('RABBITMQ_HOST') ?: 'localhost', 5672, 'test', getenv('RABBITMQ_PASSWORD'),  'testhost');
+		$connection = new AMQPStreamConnection( getenv('RABBITMQ_HOST') ?: 'localhost', 5672, 'test', getenv('RABBITMQ_PASSWORD'),  'testHost');
 		$channel = $connection->channel();
-		$channel->exchange_delcare('LoggingExchange', 'fanout', false, true, false);
+		$channel->exchange_declare('LoggingExchange', 'fanout', false, true, false);
 		$log = [ 'timestamp' => date ('Y-m-d H:i:s'), 'hostname' => gethostname(), 'service' => $service, 'level' => $level, 'message' => $message];
 		$msg = new AMQPMessage(json_encode($log, JSON_THROW_ON_ERROR), ['delivery_mode' => 2]);
 		$channel->basic_publish($msg, 'LoggingExchange', '');
@@ -24,7 +24,7 @@ function sendLog($message, $service = 'system', $level = 'ERROR'){
 	}
 }
 
-if (isset($_'SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__){
+if (isset($_['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__){
 		$service = $argv[1] ?? 'system';
 		$level = $argv[2] ?? 'INFO';
 		$message = $argv[3] ?? '';
@@ -33,7 +33,7 @@ if (isset($_'SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === __F
 			fwrite(STDERR, "Missing log message\n");
 			exit(1);
 		}
-		exit)sendLog($message, $service, $level) ? 0 : 1);
+		exit(sendLog($message, $service, $level) ? 0 : 1);
 }
  
 ?>

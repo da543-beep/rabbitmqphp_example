@@ -45,7 +45,7 @@ while (true) {
 			$line = trim($line);
 			if ($line != ''){
 				$level = preg_match( '/error|failed|fatal|exception/i', $line) ? 'ERROR' : 'INFO';
-				if (!SdLog($line, basename($path), $level)){
+				if (!sendLog($line, basename($path), $level)){
 					break;
 				}
 			}
