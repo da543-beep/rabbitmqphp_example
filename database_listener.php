@@ -12,7 +12,7 @@ require_once "Mail/smtp.php";
 function sendMFACode($username)
 {
 	$host = "ssl://smtp.gmail.com";
-	$username = getenv("ADMIN_EMAIL");
+	$smtpUsername = getenv("ADMIN_EMAIL");
 	$password = getenv("ADMIN_PASSWORD");
 	$port = "465";
 
@@ -22,8 +22,9 @@ function sendMFACode($username)
 	//getting the email address based on the username
 	$stmt = $db->prepare("SELECT email FROM users WHERE username = ?");
 	$stmt->bind_param('s', $username);
-	$stmt->execute;
+	$stmt->execute();
 	$stmt->bind_result($email);
+	$found = $stmt->fetch();
 	$stmt->close;
 	
 	//inserting code into table at that username
@@ -33,34 +34,36 @@ function sendMFACode($username)
 	$stmt->close;
 
 
-	$db->close;
+	$db->close();
 
 	
 
 	echo "User and email found";
 	$to = $email;
-	$email_from = getenv("ADMIN_EMAIL");
+	$email_from = $smtpUsername;
 	
 	$email_subject = "Your Multi Factor Authentication Code";
 	$email_body = "Your MFA Code is $mfa_code";
-	$email_address = getenv("ADMIN_EMAIL");
+	$email_address = $smtpUsername;
 	$content = "text/html; charset=utf-8";
 	$mime = "1.0";
 
-	$headers = array ('From' => $email_from,
+	$headers = array (
+		'From' => $email_from,
 		'To' => $to,
 		'Subject' => $email_subject,
 		'Reply-To' => $email_address,
 		'MIME-Version' => $mime,
 		'Content-Type' => $content);
 
-	$params = array ('host' => $host,
+	$params = array (
+		'host' => $host,
 		'port' => $port,
 		'auth' => true,
-		'username' => $username,
+		'username' => $smtpUsername,
 		'password' => $password);
 
-	$stmt = Mail::factory ('stmt', $params);
+	$stmt = Mail::factory ('smtp', $params);
 	$mail = $stmt->send($to, $headers, $email_body);
 	
 	return ['success' => true];
